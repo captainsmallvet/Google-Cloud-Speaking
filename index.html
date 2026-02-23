@@ -3,23 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Cloud Speaking</title>
+    <title>Google Cloud Speaking (Dark Mode)</title>
     <style>
-        /* Flat UI Design - ไม่มี Sticky ตามที่ขอ เพื่อให้เต็มจอที่สุด */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; box-sizing: border-box; }
-        h1 { background: #4285F4; color: white; padding: 15px; text-align: center; border-radius: 8px; margin-top: 0; font-size: 24px;}
-        .section { background: white; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        /* Dark Theme UI Design */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; box-sizing: border-box; }
+        h1 { background: #1f1f1f; color: #8ab4f8; padding: 15px; text-align: center; border-radius: 8px; margin-top: 0; font-size: 24px; border: 1px solid #333;}
+        .section { background: #1e1e1e; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 1px solid #333;}
         .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; align-items: center; }
-        .row label { font-weight: bold; min-width: 120px; }
-        input[type="text"], input[type="number"], select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; flex-grow: 1; font-family: inherit; }
-        textarea { width: 100%; resize: vertical; box-sizing: border-box; font-size: 16px; line-height: 1.5;}
-        button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; background: #e0e0e0; color: #333;}
-        button:hover { filter: brightness(0.9); }
-        .btn-primary { background: #4285F4; color: white; }
-        .btn-success { background: #0F9D58; color: white; }
-        .btn-danger { background: #DB4437; color: white; }
-        .status-box { background: #e8f0fe; padding: 10px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; max-height: 150px; overflow-y: auto; }
+        .row label { font-weight: bold; min-width: 120px; color: #b3b3b3; }
+        
+        /* Form Elements Dark Mode */
+        input[type="text"], input[type="number"], select, textarea { 
+            padding: 10px; border: 1px solid #444; border-radius: 4px; flex-grow: 1; 
+            font-family: inherit; background-color: #2d2d2d; color: #ffffff; 
+        }
+        input::placeholder, textarea::placeholder { color: #888; }
+        textarea { width: 100%; resize: vertical; box-sizing: border-box; font-size: 16px; line-height: 1.6; }
+        
+        /* Buttons */
+        button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: all 0.2s; background: #444; color: #e0e0e0; }
+        button:hover:not(:disabled) { filter: brightness(1.2); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .btn-primary { background: #8ab4f8; color: #121212; }
+        .btn-success { background: #81c995; color: #121212; }
+        .btn-danger { background: #f28b82; color: #121212; }
+        
+        /* Status & Audio */
+        .status-box { background: #202124; color: #a8c7fa; padding: 10px; border-radius: 4px; border: 1px solid #444; font-family: monospace; white-space: pre-wrap; max-height: 150px; overflow-y: auto; }
         input[type="file"] { display: none; }
+        audio { filter: invert(0.9) hue-rotate(180deg); }
+
+        /* Character Counter Style */
+        .char-count { margin-left: auto; color: #8ab4f8; font-family: monospace; font-size: 14px; font-weight: bold; background: #2d2d2d; padding: 5px 10px; border-radius: 4px; border: 1px solid #444;}
     </style>
 </head>
 <body>
@@ -27,7 +43,7 @@
     <h1>🎙️ Google Cloud Speaking</h1>
 
     <div class="section">
-        <h3>🔑 API Key Management</h3>
+        <h3 style="color: #fff;">🔑 API Key Management</h3>
         <div class="row">
             <label>Google AI Studio:</label>
             <input type="text" id="geminiKey" placeholder="no API key">
@@ -45,15 +61,15 @@
     </div>
 
     <div class="section">
-        <h3>⚙️ Global Settings</h3>
+        <h3 style="color: #fff;">⚙️ Global Settings</h3>
         <div class="row">
             <label>AI Text Model:</label>
             <select id="geminiModel">
+                <option value="gemini-2.5-flash" selected>gemini-2.5-flash (Latest Default)</option>
+                <option value="gemini-1.5-flash-latest">gemini-1.5-flash-latest (Auto-update)</option>
+                <option value="gemini-1.5-pro-latest">gemini-1.5-pro-latest (Auto-update)</option>
                 <option value="gemini-3.0-flash-preview">gemini-3.0-flash-preview</option>
                 <option value="gemini-3.0-pro-preview">gemini-3.0-pro-preview</option>
-                <option value="gemini-2.5-flash" selected>gemini-2.5-flash (Recommended)</option>
-                <option value="gemini-2.5-pro">gemini-2.5-pro</option>
-                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
             </select>
         </div>
         <div class="row">
@@ -72,9 +88,9 @@
         </div>
         <div class="row">
             <label>Pitch (-20 to 20):</label>
-            <input type="number" id="ttsPitch" value="-2.0" step="0.1" title="Lower pitch for calming tone">
+            <input type="number" id="ttsPitch" value="-2.0" step="0.1">
             <label>Speaking Rate (0.25 to 4.0):</label>
-            <input type="number" id="ttsRate" value="0.90" step="0.05" title="Slower rate for Buddhist narration">
+            <input type="number" id="ttsRate" value="0.90" step="0.05">
             <label>Volume Gain (dB):</label>
             <input type="number" id="ttsVolume" value="0.0" step="0.5">
         </div>
@@ -85,37 +101,39 @@
     </div>
 
     <div class="section">
-        <h3>📄 Primary Audio Script</h3>
+        <h3 style="color: #fff;">📄 Primary Audio Script</h3>
         <div class="row">
             <input type="file" id="filePrimary" accept=".txt" onchange="openFile(event, 'primaryScript')">
             <button onclick="document.getElementById('filePrimary').click()">Open (.txt)</button>
-            <button onclick="saveFile('primaryScript', 'primary audio script.txt')">Save</button>
+            <button onclick="saveFile('primaryScript', 'primary_audio_script.txt')">Save</button>
             <button onclick="copyElement('primaryScript')">Copy</button>
             <button class="btn-danger" onclick="clearElement('primaryScript')">Clear</button>
+            <span class="char-count" id="countPrimary">0 Chars</span>
         </div>
         <textarea id="primaryScript" rows="15" placeholder="Paste your English text here..."></textarea>
     </div>
 
     <div class="section">
-        <h3>📝 SSML Audio Script</h3>
+        <h3 style="color: #fff;">📝 SSML Audio Script</h3>
         <div class="row">
-            <button class="btn-primary" onclick="generateSSML()">✨ Generate SSML from Script</button>
+            <button id="btnGenerateSSML" class="btn-primary" onclick="generateSSML()">✨ Generate SSML from Script</button>
             <input type="file" id="fileSSML" accept=".txt" onchange="openFile(event, 'ssmlScript')">
             <button onclick="document.getElementById('fileSSML').click()">Open (.txt)</button>
-            <button onclick="saveFile('ssmlScript', 'SSML audio script.txt')">Save</button>
+            <button onclick="saveFile('ssmlScript', 'SSML_audio_script.txt')">Save</button>
             <button onclick="copyElement('ssmlScript')">Copy</button>
             <button class="btn-danger" onclick="clearElement('ssmlScript')">Clear</button>
+            <span class="char-count" id="countSSML">0 Chars</span>
         </div>
         <textarea id="ssmlScript" rows="15" placeholder="Generated SSML will appear here..."></textarea>
     </div>
 
     <div class="section">
-        <h3>🎛️ Processing Controls & Output</h3>
+        <h3 style="color: #fff;">🎛️ Processing Controls & Output</h3>
         <div class="row">
             <label>Batch Size (Chars):</label>
             <input type="number" id="batchSize" value="3500">
             <label>Inter-batch Delay (Sec):</label>
-            <input type="number" id="batchDelay" value="3" step="0.5" title="Base delay. Random jitter (0-2s) will be added automatically.">
+            <input type="number" id="batchDelay" value="3" step="0.5">
         </div>
         <div class="row">
             <button class="btn-primary" onclick="previewAudio()">▶️ Preview (First 5 sentences)</button>
@@ -123,13 +141,13 @@
             <button class="btn-danger" onclick="stopProcess()">⏹️ Stop</button>
         </div>
         
-        <h4>Status:</h4>
+        <h4 style="color: #fff; margin-bottom: 5px;">Status:</h4>
         <div class="row">
             <button onclick="copyElement('statusLog')">Copy Status</button>
         </div>
         <div id="statusLog" class="status-box">Ready.</div>
 
-        <h4>Audio Player:</h4>
+        <h4 style="color: #fff; margin-bottom: 5px;">Audio Player:</h4>
         <div class="row">
             <audio id="audioPlayer" controls style="width: 100%;"></audio>
         </div>
@@ -140,15 +158,24 @@
 
     <script>
         let isProcessing = false;
-        let audioChunksBlob = []; // Store chunks in RAM efficiently
+        let audioChunksBlob = []; 
         
-        // --- Initialization ---
         window.onload = () => {
             loadKey('geminiKey');
             loadKey('cloudKey');
+            updateCharCount('primaryScript', 'countPrimary');
+            updateCharCount('ssmlScript', 'countSSML');
         };
 
-        // --- Key Management ---
+        // Event listeners for character counters
+        document.getElementById('primaryScript').addEventListener('input', () => updateCharCount('primaryScript', 'countPrimary'));
+        document.getElementById('ssmlScript').addEventListener('input', () => updateCharCount('ssmlScript', 'countSSML'));
+
+        function updateCharCount(inputId, displayId) {
+            const textLength = document.getElementById(inputId).value.length;
+            document.getElementById(displayId).innerText = `${textLength.toLocaleString()} Chars`;
+        }
+
         function saveKey(id) {
             const val = document.getElementById(id).value.trim();
             if(val) { localStorage.setItem(id, val); alert('Key saved to browser storage.'); }
@@ -163,7 +190,6 @@
             document.getElementById(id).placeholder = 'no API key';
         }
 
-        // --- Utility Functions ---
         function copyElement(id) {
             const el = document.getElementById(id);
             const text = el.tagName === 'DIV' ? el.innerText : el.value;
@@ -172,6 +198,9 @@
         function clearElement(id) {
             const el = document.getElementById(id);
             if(el.tagName === 'DIV') el.innerText = ''; else el.value = '';
+            // Trigger count update if clearing textareas
+            if(id === 'primaryScript') updateCharCount('primaryScript', 'countPrimary');
+            if(id === 'ssmlScript') updateCharCount('ssmlScript', 'countSSML');
         }
         function logStatus(msg) {
             const box = document.getElementById('statusLog');
@@ -179,7 +208,6 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        // --- File I/O ---
         function openFile(event, targetId) {
             const file = event.target.files[0];
             if (!file) return;
@@ -187,13 +215,16 @@
             reader.onload = (e) => {
                 const target = document.getElementById(targetId);
                 const textToInsert = e.target.result;
-                // Insert at cursor position
                 const startPos = target.selectionStart;
                 const endPos = target.selectionEnd;
                 target.value = target.value.substring(0, startPos) + textToInsert + target.value.substring(endPos, target.value.length);
+                
+                // Update counter after file load
+                if(targetId === 'primaryScript') updateCharCount('primaryScript', 'countPrimary');
+                if(targetId === 'ssmlScript') updateCharCount('ssmlScript', 'countSSML');
             };
             reader.readAsText(file);
-            event.target.value = ''; // reset file input
+            event.target.value = ''; 
         }
         function saveFile(sourceId, filename) {
             const text = document.getElementById(sourceId).value;
@@ -205,13 +236,17 @@
             URL.revokeObjectURL(url);
         }
 
-        // --- Gemini AI (Text to SSML) ---
         async function generateSSML() {
             const key = document.getElementById('geminiKey').value.trim();
             if(!key) return alert('Please enter Google AI Studio API key.');
             const script = document.getElementById('primaryScript').value.trim();
             if(!script) return alert('Primary script is empty.');
             
+            const btn = document.getElementById('btnGenerateSSML');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Processing... Please wait';
+            btn.disabled = true;
+
             const model = document.getElementById('geminiModel').value;
             const promptInstruction = document.getElementById('voicePrompt').value;
             const fullPrompt = `System instructions: ${promptInstruction}\n\nTask: Convert the following text into valid SSML format. ONLY return the raw SSML code without any markdown blocks (like \`\`\`xml) or explanations. Ensure the whole text is wrapped in <speak></speak> tags.\n\nText:\n${script}`;
@@ -227,17 +262,22 @@
                 if(data.error) throw new Error(data.error.message);
                 
                 let ssmlResult = data.candidates[0].content.parts[0].text;
-                // Clean up markdown if AI ignored instructions
                 ssmlResult = ssmlResult.replace(/```xml/gi, '').replace(/```/g, '').trim();
                 document.getElementById('ssmlScript').value = ssmlResult;
+                
+                // Update counter after generation
+                updateCharCount('ssmlScript', 'countSSML');
+                
                 logStatus("SSML Generation Complete.");
             } catch (err) {
                 logStatus(`Error generating SSML: ${err.message}`);
                 alert("Error: " + err.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
 
-        // --- Audio Generation Core ---
         const delay = ms => new Promise(res => setTimeout(res, ms));
 
         function stopProcess() {
@@ -247,7 +287,6 @@
             }
         }
 
-        // Convert Base64 from Google TTS to Uint8Array (RAM efficient)
         function base64ToUint8Array(base64) {
             const binaryString = window.atob(base64);
             const len = binaryString.length;
@@ -283,20 +322,17 @@
         }
 
         function extractSentencesForPreview(ssml) {
-            // Very basic extraction of first 5 sentences for preview, keeping <speak> tags
             const innerText = ssml.replace(/<\/?speak>/gi, '');
             const sentences = innerText.match(/[^\.!\?]+[\.!\?]+/g) || [innerText];
             const previewText = sentences.slice(0, 5).join(' ');
             return `<speak>${previewText}</speak>`;
         }
 
-        // Simple chunking algorithm that tries not to break SSML tags
         function chunkSSML(ssml, maxChars) {
             let chunks = [];
             let currentChunk = "";
-            let innerText = ssml.replace(/<\/?speak>/gi, ''); // remove root tags for splitting
+            let innerText = ssml.replace(/<\/?speak>/gi, ''); 
             
-            // Split by double newline or period to keep context
             let segments = innerText.split(/(?<=\.)\s+|\n\n/); 
             
             for(let seg of segments) {
@@ -348,21 +384,19 @@
             logStatus(`Starting generation. Total batches: ${chunks.length}`);
             
             isProcessing = true;
-            audioChunksBlob = []; // Reset RAM
+            audioChunksBlob = []; 
             document.getElementById('downloadBtn').disabled = true;
 
             for(let i = 0; i < chunks.length; i++) {
-                if(!isProcessing) break; // Check for stop button
+                if(!isProcessing) break; 
 
                 logStatus(`Processing Batch ${i+1}/${chunks.length}... \nPreview: ${chunks[i].substring(0, 50)}...`);
                 
                 try {
                     const audioBase64 = await fetchTTS(chunks[i]);
-                    // Convert to binary immediately to save RAM (Base64 strings take up much more memory)
                     audioChunksBlob.push(base64ToUint8Array(audioBase64));
                     
                     if(i < chunks.length - 1 && isProcessing) {
-                        // Add random jitter to avoid bot detection (0 to 2 seconds extra)
                         const jitter = Math.random() * 2000;
                         const waitTime = baseDelay + jitter;
                         logStatus(`Waiting ${(waitTime/1000).toFixed(1)}s before next batch...`);
@@ -385,15 +419,12 @@
             }
             logStatus("Compiling audio chunks...");
             
-            // Concatenate all Uint8Arrays into a single Blob
-            // For MP3, appending raw binary frames usually plays perfectly fine in Capcut
             const finalBlob = new Blob(audioChunksBlob, { type: mimeType });
             const audioUrl = URL.createObjectURL(finalBlob);
             
             const player = document.getElementById('audioPlayer');
             player.src = audioUrl;
             
-            // Enable download
             const dBtn = document.getElementById('downloadBtn');
             dBtn.onclick = () => {
                 const a = document.createElement("a");
@@ -405,9 +436,6 @@
             
             isProcessing = false;
             logStatus(`✅ Processing Complete! You can now play or download the audio.`);
-            
-            // Suggest garbage collection by clearing reference to large array if needed
-            // audioChunksBlob = []; (We keep it here in case they want to download multiple times)
         }
     </script>
 </body>
