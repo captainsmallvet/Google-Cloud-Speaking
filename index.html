@@ -106,7 +106,7 @@
             </select>
         </div>
         <div class="row">
-            <textarea id="voicePrompt" rows="5">Please format the SSML for a Buddhist Dhamma narration in English. The target audience has basic English skills. The tone must be deep, calming, warm, empathetic, and trustworthy. Add appropriate <break time="..."/> for breathing and contemplation. Emphasize key Buddhist terms gently.</textarea>
+            <textarea id="voicePrompt" rows="8">Please format the SSML for a Buddhist Dhamma narration in English...</textarea>
         </div>
     </div>
 
@@ -170,23 +170,29 @@
         let isProcessing = false;
         let audioChunksBlob = []; 
 
-        // Preset Dictionary
         const promptPresets = {
-            "dhamma": "Please format the SSML for a Buddhist Dhamma narration in English. The target audience has basic English skills. The tone must be deep, calming, warm, empathetic, and trustworthy. Add appropriate <break time=\"...\"/> for breathing and contemplation. Emphasize key Buddhist terms gently.",
-            "meditation": "Format the SSML for a guided meditation or deep philosophical reflection. Use extreme care with pacing. Insert frequent, long <break> tags (1s to 2s) between thoughts. The voice should be whisper-soft, profoundly serene, and slow. Use <prosody rate=\"slow\"> to enhance the tranquil atmosphere.",
-            "commercial": "Please format the SSML for a vibrant, energetic video advertisement promoting fun, colorful products like rainbow or duck-shaped mooncakes. The tone should be enthusiastic, friendly, bright, and inviting. Keep the pacing upbeat and lively.",
-            "youtube": "Format the SSML for a YouTube tutorial about tech or video editing. The tone should be clear, articulate, engaging, and professional. Use natural conversational pauses <break time=\"400ms\"/> to make it sound like a real creator talking."
+            "dhamma": "Please format the SSML for a Buddhist Dhamma narration in English. The tone must be deep, calming, warm, empathetic, and trustworthy. Add appropriate <break time=\"...\"/> for breathing and contemplation.",
+            "meditation": "Format the SSML for a guided meditation or deep philosophical reflection. Use extreme care with pacing. Insert frequent, long <break> tags between thoughts. The voice should be whisper-soft and profoundly serene.",
+            "commercial": "Please format the SSML for a vibrant, energetic video advertisement promoting fun, colorful products. The tone should be enthusiastic, friendly, bright, and inviting. Keep the pacing upbeat.",
+            "youtube": "Format the SSML for a YouTube tutorial. The tone should be clear, articulate, engaging, and professional. Use natural conversational pauses <break time=\"400ms\"/>."
         };
 
-        // --- NEW: ตัดคำสั่งที่ไม่รองรับออกจาก Prompt ---
+        // --- THE MASTER PROMPT CONTROLLER ---
         function loadPreset() {
             const selected = document.getElementById('promptPresetSelect').value;
+            const voiceName = document.getElementById('ttsVoice').value;
             let basePrompt = promptPresets[selected];
             
-            basePrompt += "\n\nCRITICAL RULES FOR MODERN GOOGLE VOICES (Studio/Journey):";
-            basePrompt += "\n1. NEVER use the 'pitch' attribute in <prosody> tags.";
-            basePrompt += "\n2. NEVER use <emphasis> tags.";
-            basePrompt += "\n3. ONLY use <prosody rate=\"...\"> and <break time=\"...\"> to control the flow.";
+            basePrompt += "\n\n*** CRITICAL SSML RULES FOR GOOGLE CLOUD TTS ***\n";
+            basePrompt += "1. NEVER use the 'pitch' attribute.\n";
+            basePrompt += "2. NEVER use <emphasis> tags.\n";
+            basePrompt += "3. For <break> tags, ONLY use whole numbers with 'ms' or 's' (e.g., <break time=\"1500ms\"/>, <break time=\"2s\"/>). NEVER use decimals like 1.5s.\n";
+            
+            if (voiceName.includes('Journey')) {
+                basePrompt += "4. 🚨 CRITICAL: You are generating for a 'Journey' voice. You MUST NOT use <prosody> tags anywhere. Rely entirely on <break> for pacing.";
+            } else {
+                basePrompt += "4. You may use <prosody rate=\"...\"> to control speed, but ensure you ALWAYS close it with </prosody>.";
+            }
             
             document.getElementById('voicePrompt').value = basePrompt;
         }
@@ -292,10 +298,6 @@
                 let ssmlResult = data.candidates[0].content.parts[0].text;
                 ssmlResult = ssmlResult.replace(/```xml/gi, '').replace(/```html/gi, '').replace(/```/g, '').trim();
                 
-                // --- NEW: ตัด tags ที่มีปัญหาตั้งแต่ตอน Gen เสร็จ ---
-                ssmlResult = ssmlResult.replace(/<emphasis[^>]*>/gi, '').replace(/<\/emphasis>/gi, '');
-                ssmlResult = ssmlResult.replace(/pitch="[^"]*"/gi, '');
-
                 if(!ssmlResult.startsWith('<speak>')) ssmlResult = `<speak>\n${ssmlResult}`;
                 if(!ssmlResult.endsWith('</speak>')) ssmlResult = `${ssmlResult}\n</speak>`;
 
@@ -331,44 +333,53 @@
             return bytes;
         }
 
-        // --- NEW & ENHANCED: ตัวกรองและปิดแท็กขั้นสูงสุดก่อนยิง API ---
+        // --- THE ULTIMATE FETCH FUNCTION & SCRUBBER ---
         async function fetchTTS(ssmlText) {
             let cleanSSML = ssmlText;
+            const voiceName = document.getElementById('ttsVoice').value;
 
-            // 1. กวาดล้างคำสั่งที่ Google Cloud ไม่ชอบ
+            // 1. ลบขยะต้องห้ามออก (emphasis, pitch)
             cleanSSML = cleanSSML.replace(/<emphasis[^>]*>/gi, '').replace(/<\/emphasis>/gi, '');
-            cleanSSML = cleanSSML.replace(/pitch="[^"]*"/gi, ''); // ลบ pitch ออก
-            
-            // 2. จัดการช่องว่างแปลกๆ ที่เกิดจากการลบ (เช่น <prosody  >)
-            cleanSSML = cleanSSML.replace(/<prosody\s+>/gi, '<prosody>'); 
+            cleanSSML = cleanSSML.replace(/pitch="[^"]*"/gi, ''); 
 
-            // 3. ตรวจสอบและบังคับปิดแท็ก <prosody> ให้สมดุล ป้องกันเสียงแตก!
-            const openProsodyCount = (cleanSSML.match(/<prosody[^>]*>/gi) || []).length;
-            const closeProsodyCount = (cleanSSML.match(/<\/prosody>/gi) || []).length;
-            
-            if (openProsodyCount > closeProsodyCount) {
-                // ลบ </speak> ออกก่อน
-                cleanSSML = cleanSSML.replace(/<\/speak>/gi, '');
-                // เติม </prosody> ให้ครบตามจำนวนที่ค้างอยู่
-                for(let i = 0; i < (openProsodyCount - closeProsodyCount); i++) {
-                    cleanSSML += '</prosody>';
+            // 2. จัดการแท็กตามกฎของแต่ละโมเดล
+            if (voiceName.includes('Journey')) {
+                // Journey: ลบ prosody ทิ้งให้เกลี้ยง 
+                cleanSSML = cleanSSML.replace(/<prosody[^>]*>/gi, '');
+                cleanSSML = cleanSSML.replace(/<\/prosody>/gi, '');
+            } else {
+                // Studio: ซ่อมแซม prosody ที่เปิดทิ้งไว้
+                cleanSSML = cleanSSML.replace(/<prosody\s+>/gi, '<prosody>'); 
+                const openProsodyCount = (cleanSSML.match(/<prosody[^>]*>/gi) || []).length;
+                const closeProsodyCount = (cleanSSML.match(/<\/prosody>/gi) || []).length;
+                
+                if (openProsodyCount > closeProsodyCount) {
+                    cleanSSML = cleanSSML.replace(/<\/speak>/gi, '');
+                    for(let i = 0; i < (openProsodyCount - closeProsodyCount); i++) {
+                        cleanSSML += '</prosody>';
+                    }
+                    cleanSSML += '</speak>';
                 }
-                // ปิด </speak> คืนกลับไปที่ท้ายสุด
-                cleanSSML += '</speak>';
             }
 
             const key = document.getElementById('cloudKey').value.trim();
             const format = document.getElementById('audioFormat').value;
+
+            // 3. สร้าง Payload อย่างระมัดระวัง (Google ขี้งอนมาก)
             const payload = {
                 input: { ssml: cleanSSML },
-                voice: { languageCode: "en-US", name: document.getElementById('ttsVoice').value },
+                voice: { languageCode: "en-US", name: voiceName },
                 audioConfig: { 
-                    audioEncoding: format,
-                    pitch: parseFloat(document.getElementById('ttsPitch').value),
-                    speakingRate: parseFloat(document.getElementById('ttsRate').value),
-                    volumeGainDb: parseFloat(document.getElementById('ttsVolume').value)
+                    audioEncoding: format 
                 }
             };
+
+            // แนบพารามิเตอร์ Pitch และ Rate เข้าไป *เฉพาะเมื่อไม่ใช่เสียง Journey*
+            if (!voiceName.includes('Journey')) {
+                payload.audioConfig.pitch = parseFloat(document.getElementById('ttsPitch').value);
+                payload.audioConfig.speakingRate = parseFloat(document.getElementById('ttsRate').value);
+                payload.audioConfig.volumeGainDb = parseFloat(document.getElementById('ttsVolume').value);
+            }
 
             const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${key}`, {
                 method: 'POST',
