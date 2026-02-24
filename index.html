@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Cloud Speaking (Dark Mode)</title>
+    <title>Google Cloud Speaking (Pro Version)</title>
     <style>
         /* Dark Theme UI Design */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; box-sizing: border-box; }
@@ -75,7 +75,7 @@
         </div>
         <div class="row">
             <label>Cloud TTS Voice:</label>
-            <select id="ttsVoice">
+            <select id="ttsVoice" onchange="loadPreset()">
                 <option value="en-US-Journey-D" selected>en-US-Journey-D (Male - Natural/Deep)</option>
                 <option value="en-US-Studio-Q">en-US-Studio-Q (Male - Studio)</option>
                 <option value="en-US-Journey-F">en-US-Journey-F (Female - Natural)</option>
@@ -106,7 +106,7 @@
             </select>
         </div>
         <div class="row">
-            <textarea id="voicePrompt" rows="4">Please format the SSML for a Buddhist Dhamma narration in English. The target audience has basic English skills. The tone must be deep, calming, warm, empathetic, and trustworthy. Add appropriate <break time="..."/> for breathing and contemplation. Emphasize key Buddhist terms gently.</textarea>
+            <textarea id="voicePrompt" rows="5">Please format the SSML for a Buddhist Dhamma narration in English. The target audience has basic English skills. The tone must be deep, calming, warm, empathetic, and trustworthy. Add appropriate <break time="..."/> for breathing and contemplation. Emphasize key Buddhist terms gently.</textarea>
         </div>
     </div>
 
@@ -120,7 +120,7 @@
             <button class="btn-danger" onclick="clearElement('primaryScript')">Clear</button>
             <span class="char-count" id="countPrimary">0 Chars</span>
         </div>
-        <textarea id="primaryScript" rows="15" placeholder="Paste your English text here..."></textarea>
+        <textarea id="primaryScript" rows="12" placeholder="Paste your English text here..."></textarea>
     </div>
 
     <div class="section">
@@ -134,7 +134,7 @@
             <button class="btn-danger" onclick="clearElement('ssmlScript')">Clear</button>
             <span class="char-count" id="countSSML">0 Chars</span>
         </div>
-        <textarea id="ssmlScript" rows="15" placeholder="Generated SSML will appear here..."></textarea>
+        <textarea id="ssmlScript" rows="12" placeholder="Generated SSML will appear here..."></textarea>
     </div>
 
     <div class="section">
@@ -173,14 +173,24 @@
         // Preset Dictionary
         const promptPresets = {
             "dhamma": "Please format the SSML for a Buddhist Dhamma narration in English. The target audience has basic English skills. The tone must be deep, calming, warm, empathetic, and trustworthy. Add appropriate <break time=\"...\"/> for breathing and contemplation. Emphasize key Buddhist terms gently.",
-            "meditation": "Format the SSML for a guided meditation or deep philosophical reflection. Use extreme care with pacing. Insert frequent, long <break> tags (1s to 2s) between thoughts. The voice should be whisper-soft, profoundly serene, and slow. Use <prosody rate=\"slow\" pitch=\"low\"> to enhance the tranquil atmosphere.",
+            "meditation": "Format the SSML for a guided meditation or deep philosophical reflection. Use extreme care with pacing. Insert frequent, long <break> tags (1s to 2s) between thoughts. The voice should be whisper-soft, profoundly serene, and slow. Use <prosody rate=\"slow\"> to enhance the tranquil atmosphere.",
             "commercial": "Please format the SSML for a vibrant, energetic video advertisement promoting fun, colorful products like rainbow or duck-shaped mooncakes. The tone should be enthusiastic, friendly, bright, and inviting. Use <emphasis> on exciting words and delicious descriptions, keeping the pacing upbeat and lively.",
             "youtube": "Format the SSML for a YouTube tutorial about tech or video editing. The tone should be clear, articulate, engaging, and professional. Use natural conversational pauses <break time=\"400ms\"/> to make it sound like a real creator talking. Emphasize technical terms clearly without sounding robotic."
         };
 
+        // Smart Load Preset: Adapts rules based on selected TTS Voice
         function loadPreset() {
             const selected = document.getElementById('promptPresetSelect').value;
-            document.getElementById('voicePrompt').value = promptPresets[selected];
+            const voice = document.getElementById('ttsVoice').value;
+            let basePrompt = promptPresets[selected];
+            
+            if(voice.includes('Journey')) {
+                basePrompt += "\n\nCRITICAL RULE: Do NOT use the 'pitch' attribute anywhere in the SSML. The selected Journey voice does NOT support pitch modification and will cause an error.";
+            } else {
+                basePrompt += "\n\nNOTE: You MAY use the 'pitch' attribute in <prosody> tags using percentage values (e.g., pitch=\"-10%\") to adjust the tone for this Studio voice.";
+            }
+            
+            document.getElementById('voicePrompt').value = basePrompt;
         }
         
         window.onload = () => {
@@ -188,9 +198,9 @@
             loadKey('cloudKey');
             updateCharCount('primaryScript', 'countPrimary');
             updateCharCount('ssmlScript', 'countSSML');
+            loadPreset(); // Initialize with rules
         };
 
-        // Event listeners for character counters
         document.getElementById('primaryScript').addEventListener('input', () => updateCharCount('primaryScript', 'countPrimary'));
         document.getElementById('ssmlScript').addEventListener('input', () => updateCharCount('ssmlScript', 'countSSML'));
 
@@ -221,7 +231,6 @@
         function clearElement(id) {
             const el = document.getElementById(id);
             if(el.tagName === 'DIV') el.innerText = ''; else el.value = '';
-            // Trigger count update if clearing textareas
             if(id === 'primaryScript') updateCharCount('primaryScript', 'countPrimary');
             if(id === 'ssmlScript') updateCharCount('ssmlScript', 'countSSML');
         }
@@ -241,8 +250,6 @@
                 const startPos = target.selectionStart;
                 const endPos = target.selectionEnd;
                 target.value = target.value.substring(0, startPos) + textToInsert + target.value.substring(endPos, target.value.length);
-                
-                // Update counter after file load
                 if(targetId === 'primaryScript') updateCharCount('primaryScript', 'countPrimary');
                 if(targetId === 'ssmlScript') updateCharCount('ssmlScript', 'countSSML');
             };
@@ -285,10 +292,13 @@
                 if(data.error) throw new Error(data.error.message);
                 
                 let ssmlResult = data.candidates[0].content.parts[0].text;
-                ssmlResult = ssmlResult.replace(/```xml/gi, '').replace(/```/g, '').trim();
-                document.getElementById('ssmlScript').value = ssmlResult;
+                ssmlResult = ssmlResult.replace(/```xml/gi, '').replace(/```html/gi, '').replace(/```/g, '').trim();
                 
-                // Update counter after generation
+                // Safety wrapper guarantee
+                if(!ssmlResult.startsWith('<speak>')) ssmlResult = `<speak>\n${ssmlResult}`;
+                if(!ssmlResult.endsWith('</speak>')) ssmlResult = `${ssmlResult}\n</speak>`;
+
+                document.getElementById('ssmlScript').value = ssmlResult;
                 updateCharCount('ssmlScript', 'countSSML');
                 
                 logStatus("SSML Generation Complete.");
@@ -344,32 +354,32 @@
             return data.audioContent;
         }
 
-        function extractSentencesForPreview(ssml) {
-            const innerText = ssml.replace(/<\/?speak>/gi, '');
-            const sentences = innerText.match(/[^\.!\?]+[\.!\?]+/g) || [innerText];
-            const previewText = sentences.slice(0, 5).join(' ');
-            return `<speak>${previewText}</speak>`;
-        }
+        // --- NEW: Smart SSML Tag Parser ---
+        function getOpenTags(ssml) {
+            const openTags = [];
+            const regex = /<(\/?)([a-zA-Z0-9\-:]+)([^>]*)>/g;
+            let match;
+            while ((match = regex.exec(ssml)) !== null) {
+                const isClosing = match[1] === '/';
+                const tagName = match[2].toLowerCase();
+                const attributes = match[3];
+                
+                // Ignore self-closing tags
+                if (attributes.trim().endsWith('/')) continue;
+                if (['break', 'mark'].includes(tagName)) continue;
 
-        function chunkSSML(ssml, maxChars) {
-            let chunks = [];
-            let currentChunk = "";
-            let innerText = ssml.replace(/<\/?speak>/gi, ''); 
-            
-            let segments = innerText.split(/(?<=\.)\s+|\n\n/); 
-            
-            for(let seg of segments) {
-                if((currentChunk.length + seg.length) > maxChars) {
-                    if(currentChunk) chunks.push(`<speak>${currentChunk.trim()}</speak>`);
-                    currentChunk = seg + " ";
+                if (!isClosing) {
+                    openTags.push({ name: tagName, full: match[0] });
                 } else {
-                    currentChunk += seg + " ";
+                    // Remove the matching open tag from the stack
+                    const index = openTags.map(t => t.name).lastIndexOf(tagName);
+                    if (index !== -1) openTags.splice(index, 1);
                 }
             }
-            if(currentChunk.trim()) chunks.push(`<speak>${currentChunk.trim()}</speak>`);
-            return chunks;
+            return openTags; 
         }
 
+        // --- UPDATED: Safe Preview Function ---
         async function previewAudio() {
             if(!document.getElementById('cloudKey').value) return alert("Missing Google Cloud API Key.");
             let ssml = document.getElementById('ssmlScript').value;
@@ -378,8 +388,20 @@
             logStatus("Generating Preview...");
             isProcessing = true;
             try {
-                const previewSSML = extractSentencesForPreview(ssml);
-                const audioBase64 = await fetchTTS(previewSSML);
+                let innerText = ssml.replace(/<\/?speak>/gi, '').trim();
+                // Split safely by punctuation, ignoring internal tag structure
+                let segments = innerText.split(/(?<=\.|\?|\!)\s+|\n\n/); 
+                let previewText = segments.slice(0, 5).join(' '); 
+                
+                // Auto-Close any tags left open by the truncation
+                let tagsToClose = getOpenTags(previewText);
+                for (let i = tagsToClose.length - 1; i >= 0; i--) {
+                    previewText += `</${tagsToClose[i].name}>`;
+                }
+                
+                const safeSSML = `<speak>${previewText}</speak>`;
+                
+                const audioBase64 = await fetchTTS(safeSSML);
                 const format = document.getElementById('audioFormat').value === 'MP3' ? 'audio/mpeg' : 'audio/wav';
                 const audioBlob = new Blob([base64ToUint8Array(audioBase64)], { type: format });
                 
@@ -392,6 +414,46 @@
                 logStatus("Preview Error: " + e.message);
             }
             isProcessing = false;
+        }
+
+        // --- UPDATED: Smart Chunking Function ---
+        function chunkSSML(ssml, maxChars) {
+            let chunks = [];
+            let currentChunk = "";
+            let innerText = ssml.replace(/<\/?speak>/gi, '').trim(); 
+            let segments = innerText.split(/(?<=\.|\?|\!)\s+|\n\n/); 
+            
+            let activeTags = []; // Keeps track of tags that carry over to next chunk
+            
+            for(let seg of segments) {
+                if((currentChunk.length + seg.length) > maxChars) {
+                    if(currentChunk.trim()) {
+                        let chunkToPush = currentChunk.trim();
+                        // Auto-close open tags before finalizing this chunk
+                        let tagsToClose = getOpenTags(chunkToPush);
+                        for (let i = tagsToClose.length - 1; i >= 0; i--) {
+                            chunkToPush += `</${tagsToClose[i].name}>`;
+                        }
+                        chunks.push(`<speak>${chunkToPush}</speak>`);
+                        
+                        // Pass open tags to the start of the next chunk
+                        activeTags = tagsToClose; 
+                    }
+                    // Re-open tags at the beginning of the new chunk
+                    currentChunk = activeTags.map(t => t.full).join('') + seg + " ";
+                } else {
+                    currentChunk += seg + " ";
+                }
+            }
+            if(currentChunk.trim()) {
+                let chunkToPush = currentChunk.trim();
+                let tagsToClose = getOpenTags(chunkToPush);
+                for (let i = tagsToClose.length - 1; i >= 0; i--) {
+                    chunkToPush += `</${tagsToClose[i].name}>`;
+                }
+                chunks.push(`<speak>${chunkToPush}</speak>`);
+            }
+            return chunks;
         }
 
         async function startGeneration() {
@@ -413,7 +475,7 @@
             for(let i = 0; i < chunks.length; i++) {
                 if(!isProcessing) break; 
 
-                logStatus(`Processing Batch ${i+1}/${chunks.length}... \nPreview: ${chunks[i].substring(0, 50)}...`);
+                logStatus(`Processing Batch ${i+1}/${chunks.length}... \nPreview: ${chunks[i].replace(/<[^>]+>/g, '').substring(0, 50)}...`);
                 
                 try {
                     const audioBase64 = await fetchTTS(chunks[i]);
