@@ -180,19 +180,13 @@
         // --- THE MASTER PROMPT CONTROLLER ---
         function loadPreset() {
             const selected = document.getElementById('promptPresetSelect').value;
-            const voiceName = document.getElementById('ttsVoice').value;
             let basePrompt = promptPresets[selected];
             
             basePrompt += "\n\n*** CRITICAL SSML RULES FOR GOOGLE CLOUD TTS ***\n";
             basePrompt += "1. NEVER use the 'pitch' attribute.\n";
             basePrompt += "2. NEVER use <emphasis> tags.\n";
             basePrompt += "3. For <break> tags, ONLY use whole numbers with 'ms' or 's' (e.g., <break time=\"1500ms\"/>, <break time=\"2s\"/>). NEVER use decimals like 1.5s.\n";
-            
-            if (voiceName.includes('Journey')) {
-                basePrompt += "4. 🚨 CRITICAL: You are generating for a 'Journey' voice. You MUST NOT use <prosody> tags anywhere. Rely entirely on <break> for pacing.";
-            } else {
-                basePrompt += "4. You may use <prosody rate=\"...\"> to control speed, but ensure you ALWAYS close it with </prosody>.";
-            }
+            basePrompt += "4. You may use <prosody rate=\"...\"> to control speed, but ensure you ALWAYS close it with </prosody>.";
             
             document.getElementById('voicePrompt').value = basePrompt;
         }
@@ -333,23 +327,40 @@
             return bytes;
         }
 
-        // --- THE ULTIMATE FETCH FUNCTION & SCRUBBER ---
+        // --- ✨ THE SMART TRANSLATOR & SCRUBBER ✨ ---
         async function fetchTTS(ssmlText) {
-            let cleanSSML = ssmlText;
             const voiceName = document.getElementById('ttsVoice').value;
+            const key = document.getElementById('cloudKey').value.trim();
+            const format = document.getElementById('audioFormat').value;
+            
+            let payload = {
+                voice: { languageCode: "en-US", name: voiceName },
+                audioConfig: { audioEncoding: format }
+            };
 
-            // 1. ลบขยะต้องห้ามออก (emphasis, pitch)
-            cleanSSML = cleanSSML.replace(/<emphasis[^>]*>/gi, '').replace(/<\/emphasis>/gi, '');
-            cleanSSML = cleanSSML.replace(/pitch="[^"]*"/gi, ''); 
-
-            // 2. จัดการแท็กตามกฎของแต่ละโมเดล
+            // 🤖 แยกสมองการประมวลผลระหว่าง Journey กับ Studio
             if (voiceName.includes('Journey')) {
-                // Journey: ลบ prosody ทิ้งให้เกลี้ยง 
-                cleanSSML = cleanSSML.replace(/<prosody[^>]*>/gi, '');
-                cleanSSML = cleanSSML.replace(/<\/prosody>/gi, '');
+                // โหมด Journey: ถอดร่าง SSML กลายเป็น Plain Text
+                let plainText = ssmlText;
+                
+                // แปลง <break> ให้กลายเป็นจุดไข่ปลา (เพื่อให้ Journey เว้นวรรคหายใจ)
+                plainText = plainText.replace(/<break[^>]*>/gi, ' ... '); 
+                
+                // ล้างบางแท็ก XML ที่เหลืออยู่ทั้งหมด (รวมถึง <speak> และ <prosody>)
+                plainText = plainText.replace(/<[^>]+>/g, '');
+                
+                // ส่งเป็น Text เพียวๆ! ไม่มี Error 100%
+                payload.input = { text: plainText.trim() };
+                
+                // (Journey ไม่ให้ส่ง Pitch กับ Rate ไปกวนใจ เลยไม่ต้องแนบไป)
+                
             } else {
-                // Studio: ซ่อมแซม prosody ที่เปิดทิ้งไว้
+                // โหมด Studio: จัดการ SSML ให้เนี้ยบที่สุด
+                let cleanSSML = ssmlText;
+                cleanSSML = cleanSSML.replace(/<emphasis[^>]*>/gi, '').replace(/<\/emphasis>/gi, '');
+                cleanSSML = cleanSSML.replace(/pitch="[^"]*"/gi, ''); 
                 cleanSSML = cleanSSML.replace(/<prosody\s+>/gi, '<prosody>'); 
+                
                 const openProsodyCount = (cleanSSML.match(/<prosody[^>]*>/gi) || []).length;
                 const closeProsodyCount = (cleanSSML.match(/<\/prosody>/gi) || []).length;
                 
@@ -360,22 +371,10 @@
                     }
                     cleanSSML += '</speak>';
                 }
-            }
 
-            const key = document.getElementById('cloudKey').value.trim();
-            const format = document.getElementById('audioFormat').value;
-
-            // 3. สร้าง Payload อย่างระมัดระวัง (Google ขี้งอนมาก)
-            const payload = {
-                input: { ssml: cleanSSML },
-                voice: { languageCode: "en-US", name: voiceName },
-                audioConfig: { 
-                    audioEncoding: format 
-                }
-            };
-
-            // แนบพารามิเตอร์ Pitch และ Rate เข้าไป *เฉพาะเมื่อไม่ใช่เสียง Journey*
-            if (!voiceName.includes('Journey')) {
+                payload.input = { ssml: cleanSSML };
+                
+                // แนบการตั้งค่า Pitch/Rate ได้ตามปกติ
                 payload.audioConfig.pitch = parseFloat(document.getElementById('ttsPitch').value);
                 payload.audioConfig.speakingRate = parseFloat(document.getElementById('ttsRate').value);
                 payload.audioConfig.volumeGainDb = parseFloat(document.getElementById('ttsVolume').value);
