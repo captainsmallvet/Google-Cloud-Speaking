@@ -65,12 +65,12 @@
         <div class="row">
             <label>AI Text Model:</label>
             <select id="geminiModel">
-                        <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview (Default)</option>
-                        <option value="gemini-flash-latest">Gemini Flash Latest</option>
-                        <option value="gemini-flash-lite-latest">Gemini Flash Lite Latest</option>
-                        <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-                        <option value="gemini-3-pro-preview">gemini-3-pro-preview</option>
-                        <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro Preview</option>
+                <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview (Default)</option>
+                <option value="gemini-flash-latest">Gemini Flash Latest</option>
+                <option value="gemini-flash-lite-latest">Gemini Flash Lite Latest</option>
+                <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+                <option value="gemini-3-pro-preview">gemini-3-pro-preview</option>
+                <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro Preview</option>
             </select>
         </div>
         <div class="row">
@@ -95,9 +95,18 @@
             <label>Volume Gain (dB):</label>
             <input type="number" id="ttsVolume" value="0.0" step="0.5">
         </div>
+        
+        <div class="row" style="justify-content: space-between; margin-top: 15px;">
+            <label>AI SSML Prompt Preset:</label>
+            <select id="promptPresetSelect" onchange="loadPreset()" style="max-width: 400px; border-color: #8ab4f8;">
+                <option value="dhamma">🧘‍♂️ Calm Dhamma Narration (Default)</option>
+                <option value="meditation">🪷 Deep Meditation & Philosophy</option>
+                <option value="commercial">🎬 Energetic Commercial (Sweets/Desserts)</option>
+                <option value="youtube">💻 YouTube Tech/Tutorial Video</option>
+            </select>
+        </div>
         <div class="row">
-            <label style="width: 100%;">Additional Voice Details (For AI SSML Generation):</label>
-            <textarea id="voicePrompt" rows="3">Please format the SSML for a Buddhist Dhamma narration in English. The target audience has basic English skills. The tone must be deep, calming, warm, empathetic, and trustworthy. Add appropriate <break time="..."/> for breathing and contemplation. Emphasize key Buddhist terms gently.</textarea>
+            <textarea id="voicePrompt" rows="4">Please format the SSML for a Buddhist Dhamma narration in English. The target audience has basic English skills. The tone must be deep, calming, warm, empathetic, and trustworthy. Add appropriate <break time="..."/> for breathing and contemplation. Emphasize key Buddhist terms gently.</textarea>
         </div>
     </div>
 
@@ -160,6 +169,19 @@
     <script>
         let isProcessing = false;
         let audioChunksBlob = []; 
+
+        // Preset Dictionary
+        const promptPresets = {
+            "dhamma": "Please format the SSML for a Buddhist Dhamma narration in English. The target audience has basic English skills. The tone must be deep, calming, warm, empathetic, and trustworthy. Add appropriate <break time=\"...\"/> for breathing and contemplation. Emphasize key Buddhist terms gently.",
+            "meditation": "Format the SSML for a guided meditation or deep philosophical reflection. Use extreme care with pacing. Insert frequent, long <break> tags (1s to 2s) between thoughts. The voice should be whisper-soft, profoundly serene, and slow. Use <prosody rate=\"slow\" pitch=\"low\"> to enhance the tranquil atmosphere.",
+            "commercial": "Please format the SSML for a vibrant, energetic video advertisement promoting fun, colorful products like rainbow or duck-shaped mooncakes. The tone should be enthusiastic, friendly, bright, and inviting. Use <emphasis> on exciting words and delicious descriptions, keeping the pacing upbeat and lively.",
+            "youtube": "Format the SSML for a YouTube tutorial about tech or video editing. The tone should be clear, articulate, engaging, and professional. Use natural conversational pauses <break time=\"400ms\"/> to make it sound like a real creator talking. Emphasize technical terms clearly without sounding robotic."
+        };
+
+        function loadPreset() {
+            const selected = document.getElementById('promptPresetSelect').value;
+            document.getElementById('voicePrompt').value = promptPresets[selected];
+        }
         
         window.onload = () => {
             loadKey('geminiKey');
