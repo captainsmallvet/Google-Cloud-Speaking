@@ -332,17 +332,6 @@
             const key = document.getElementById('cloudKey').value.trim();
             const format = document.getElementById('audioFormat').value;
             
-            let cleanSSML = ssmlText;
-
-            // 1. ทำความสะอาดพื้นฐาน: ลบ emphasis และ pitch
-            cleanSSML = cleanSSML.replace(/<emphasis[^>]*>/gi, '').replace(/<\/emphasis>/gi, '');
-            cleanSSML = cleanSSML.replace(/pitch="[^"]*"/gi, ''); 
-
-            // 2. ✨ แปลงเวลาทศนิยม (เช่น 1.5s) เป็นมิลลิวินาที (1500ms) อัตโนมัติ ป้องกัน Journey เด้ง Error!
-            cleanSSML = cleanSSML.replace(/time="(\d*\.?\d+)s"/gi, (match, p1) => {
-                return 'time="' + Math.round(parseFloat(p1) * 1000) + 'ms"';
-            });
-
             let payload = {
                 voice: { languageCode: "en-US", name: voiceName },
                 audioConfig: { audioEncoding: format }
@@ -350,14 +339,31 @@
 
             // 3. แยกสมองการจัดการตามรุ่นเสียง
             if (voiceName.includes('Journey')) {
-                // Journey: ส่งแบบ SSML เพียวๆ เพื่อให้ <break> ทำงาน (ไม่อ่านดอท) แต่ห้ามมี <prosody> เด็ดขาด!
-                cleanSSML = cleanSSML.replace(/<prosody[^>]*>/gi, '');
-                cleanSSML = cleanSSML.replace(/<\/prosody>/gi, '');
-                payload.input = { ssml: cleanSSML };
+                // โหมด Journey: ถอดร่าง SSML เป็นข้อความธรรมดา (Plain Text)
+                let plainText = ssmlText;
                 
-                // ไม่ต้องส่งค่า pitch/rate ไปใน audioConfig เพราะ Journey ไม่รองรับ
+                // ✨ ไฮไลท์: แทนที่ <break> ด้วยการขึ้นย่อหน้าใหม่ (\n\n) เพื่อให้ AI หยุดพักหายใจอย่างเป็นธรรมชาติ (และไม่อ่านว่าดอท)
+                plainText = plainText.replace(/<break[^>]*>/gi, '\n\n');
+                
+                // ลบแท็กอื่นๆ ออกให้หมด (<speak>, <prosody>, ฯลฯ) เพราะ Journey ไม่รองรับ SSML เลย!
+                plainText = plainText.replace(/<[^>]+>/g, '');
+                
+                // คลีนช่องว่าง \n ที่ซ้อนกันให้สวยงาม
+                plainText = plainText.replace(/\n\s*\n/g, '\n\n');
+
+                payload.input = { text: plainText.trim() };
+                
+                // *ไม่ต้องส่งค่า pitch/rate ไปใน audioConfig เพราะ Journey ไม่รองรับ*
+                
             } else {
-                // Studio: ซ่อมแซม prosody ที่ค้าง และให้ส่งค่า pitch/rate เพิ่มเติมได้
+                // โหมด Studio: ซ่อมแซม prosody ที่ค้าง และให้ส่งค่า pitch/rate เพิ่มเติมได้
+                let cleanSSML = ssmlText;
+                cleanSSML = cleanSSML.replace(/<emphasis[^>]*>/gi, '').replace(/<\/emphasis>/gi, '');
+                cleanSSML = cleanSSML.replace(/pitch="[^"]*"/gi, ''); 
+                cleanSSML = cleanSSML.replace(/time="(\d*\.?\d+)s"/gi, (match, p1) => {
+                    return 'time="' + Math.round(parseFloat(p1) * 1000) + 'ms"';
+                });
+
                 cleanSSML = cleanSSML.replace(/<prosody\s+>/gi, '<prosody>'); 
                 const openProsodyCount = (cleanSSML.match(/<prosody[^>]*>/gi) || []).length;
                 const closeProsodyCount = (cleanSSML.match(/<\/prosody>/gi) || []).length;
