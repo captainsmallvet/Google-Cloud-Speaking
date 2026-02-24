@@ -174,21 +174,19 @@
         const promptPresets = {
             "dhamma": "Please format the SSML for a Buddhist Dhamma narration in English. The target audience has basic English skills. The tone must be deep, calming, warm, empathetic, and trustworthy. Add appropriate <break time=\"...\"/> for breathing and contemplation. Emphasize key Buddhist terms gently.",
             "meditation": "Format the SSML for a guided meditation or deep philosophical reflection. Use extreme care with pacing. Insert frequent, long <break> tags (1s to 2s) between thoughts. The voice should be whisper-soft, profoundly serene, and slow. Use <prosody rate=\"slow\"> to enhance the tranquil atmosphere.",
-            "commercial": "Please format the SSML for a vibrant, energetic video advertisement promoting fun, colorful products like rainbow or duck-shaped mooncakes. The tone should be enthusiastic, friendly, bright, and inviting. Use <emphasis> on exciting words and delicious descriptions, keeping the pacing upbeat and lively.",
-            "youtube": "Format the SSML for a YouTube tutorial about tech or video editing. The tone should be clear, articulate, engaging, and professional. Use natural conversational pauses <break time=\"400ms\"/> to make it sound like a real creator talking. Emphasize technical terms clearly without sounding robotic."
+            "commercial": "Please format the SSML for a vibrant, energetic video advertisement promoting fun, colorful products like rainbow or duck-shaped mooncakes. The tone should be enthusiastic, friendly, bright, and inviting. Keep the pacing upbeat and lively.",
+            "youtube": "Format the SSML for a YouTube tutorial about tech or video editing. The tone should be clear, articulate, engaging, and professional. Use natural conversational pauses <break time=\"400ms\"/> to make it sound like a real creator talking."
         };
 
-        // Smart Load Preset: Adapts rules based on selected TTS Voice
+        // --- NEW: ตัดคำสั่งที่ไม่รองรับออกจาก Prompt ---
         function loadPreset() {
             const selected = document.getElementById('promptPresetSelect').value;
-            const voice = document.getElementById('ttsVoice').value;
             let basePrompt = promptPresets[selected];
             
-            if(voice.includes('Journey')) {
-                basePrompt += "\n\nCRITICAL RULE: Do NOT use the 'pitch' attribute anywhere in the SSML. The selected Journey voice does NOT support pitch modification and will cause an error.";
-            } else {
-                basePrompt += "\n\nNOTE: You MAY use the 'pitch' attribute in <prosody> tags using percentage values (e.g., pitch=\"-10%\") to adjust the tone for this Studio voice.";
-            }
+            basePrompt += "\n\nCRITICAL RULES FOR MODERN GOOGLE VOICES (Studio/Journey):";
+            basePrompt += "\n1. NEVER use the 'pitch' attribute in <prosody> tags.";
+            basePrompt += "\n2. NEVER use <emphasis> tags.";
+            basePrompt += "\n3. ONLY use <prosody rate=\"...\"> and <break time=\"...\"> to control the flow.";
             
             document.getElementById('voicePrompt').value = basePrompt;
         }
@@ -198,7 +196,7 @@
             loadKey('cloudKey');
             updateCharCount('primaryScript', 'countPrimary');
             updateCharCount('ssmlScript', 'countSSML');
-            loadPreset(); // Initialize with rules
+            loadPreset(); 
         };
 
         document.getElementById('primaryScript').addEventListener('input', () => updateCharCount('primaryScript', 'countPrimary'));
@@ -294,7 +292,10 @@
                 let ssmlResult = data.candidates[0].content.parts[0].text;
                 ssmlResult = ssmlResult.replace(/```xml/gi, '').replace(/```html/gi, '').replace(/```/g, '').trim();
                 
-                // Safety wrapper guarantee
+                // --- NEW: ตัด tags ที่มีปัญหาตั้งแต่ตอน Gen เสร็จ ---
+                ssmlResult = ssmlResult.replace(/<emphasis[^>]*>/gi, '').replace(/<\/emphasis>/gi, '');
+                ssmlResult = ssmlResult.replace(/pitch="[^"]*"/gi, '');
+
                 if(!ssmlResult.startsWith('<speak>')) ssmlResult = `<speak>\n${ssmlResult}`;
                 if(!ssmlResult.endsWith('</speak>')) ssmlResult = `${ssmlResult}\n</speak>`;
 
@@ -330,11 +331,36 @@
             return bytes;
         }
 
+        // --- NEW & ENHANCED: ตัวกรองและปิดแท็กขั้นสูงสุดก่อนยิง API ---
         async function fetchTTS(ssmlText) {
+            let cleanSSML = ssmlText;
+
+            // 1. กวาดล้างคำสั่งที่ Google Cloud ไม่ชอบ
+            cleanSSML = cleanSSML.replace(/<emphasis[^>]*>/gi, '').replace(/<\/emphasis>/gi, '');
+            cleanSSML = cleanSSML.replace(/pitch="[^"]*"/gi, ''); // ลบ pitch ออก
+            
+            // 2. จัดการช่องว่างแปลกๆ ที่เกิดจากการลบ (เช่น <prosody  >)
+            cleanSSML = cleanSSML.replace(/<prosody\s+>/gi, '<prosody>'); 
+
+            // 3. ตรวจสอบและบังคับปิดแท็ก <prosody> ให้สมดุล ป้องกันเสียงแตก!
+            const openProsodyCount = (cleanSSML.match(/<prosody[^>]*>/gi) || []).length;
+            const closeProsodyCount = (cleanSSML.match(/<\/prosody>/gi) || []).length;
+            
+            if (openProsodyCount > closeProsodyCount) {
+                // ลบ </speak> ออกก่อน
+                cleanSSML = cleanSSML.replace(/<\/speak>/gi, '');
+                // เติม </prosody> ให้ครบตามจำนวนที่ค้างอยู่
+                for(let i = 0; i < (openProsodyCount - closeProsodyCount); i++) {
+                    cleanSSML += '</prosody>';
+                }
+                // ปิด </speak> คืนกลับไปที่ท้ายสุด
+                cleanSSML += '</speak>';
+            }
+
             const key = document.getElementById('cloudKey').value.trim();
             const format = document.getElementById('audioFormat').value;
             const payload = {
-                input: { ssml: ssmlText },
+                input: { ssml: cleanSSML },
                 voice: { languageCode: "en-US", name: document.getElementById('ttsVoice').value },
                 audioConfig: { 
                     audioEncoding: format,
@@ -354,7 +380,6 @@
             return data.audioContent;
         }
 
-        // --- NEW: Smart SSML Tag Parser ---
         function getOpenTags(ssml) {
             const openTags = [];
             const regex = /<(\/?)([a-zA-Z0-9\-:]+)([^>]*)>/g;
@@ -364,14 +389,12 @@
                 const tagName = match[2].toLowerCase();
                 const attributes = match[3];
                 
-                // Ignore self-closing tags
                 if (attributes.trim().endsWith('/')) continue;
                 if (['break', 'mark'].includes(tagName)) continue;
 
                 if (!isClosing) {
                     openTags.push({ name: tagName, full: match[0] });
                 } else {
-                    // Remove the matching open tag from the stack
                     const index = openTags.map(t => t.name).lastIndexOf(tagName);
                     if (index !== -1) openTags.splice(index, 1);
                 }
@@ -379,7 +402,6 @@
             return openTags; 
         }
 
-        // --- UPDATED: Safe Preview Function ---
         async function previewAudio() {
             if(!document.getElementById('cloudKey').value) return alert("Missing Google Cloud API Key.");
             let ssml = document.getElementById('ssmlScript').value;
@@ -389,11 +411,9 @@
             isProcessing = true;
             try {
                 let innerText = ssml.replace(/<\/?speak>/gi, '').trim();
-                // Split safely by punctuation, ignoring internal tag structure
                 let segments = innerText.split(/(?<=\.|\?|\!)\s+|\n\n/); 
                 let previewText = segments.slice(0, 5).join(' '); 
                 
-                // Auto-Close any tags left open by the truncation
                 let tagsToClose = getOpenTags(previewText);
                 for (let i = tagsToClose.length - 1; i >= 0; i--) {
                     previewText += `</${tagsToClose[i].name}>`;
@@ -416,30 +436,26 @@
             isProcessing = false;
         }
 
-        // --- UPDATED: Smart Chunking Function ---
         function chunkSSML(ssml, maxChars) {
             let chunks = [];
             let currentChunk = "";
             let innerText = ssml.replace(/<\/?speak>/gi, '').trim(); 
             let segments = innerText.split(/(?<=\.|\?|\!)\s+|\n\n/); 
             
-            let activeTags = []; // Keeps track of tags that carry over to next chunk
+            let activeTags = []; 
             
             for(let seg of segments) {
                 if((currentChunk.length + seg.length) > maxChars) {
                     if(currentChunk.trim()) {
                         let chunkToPush = currentChunk.trim();
-                        // Auto-close open tags before finalizing this chunk
                         let tagsToClose = getOpenTags(chunkToPush);
                         for (let i = tagsToClose.length - 1; i >= 0; i--) {
                             chunkToPush += `</${tagsToClose[i].name}>`;
                         }
                         chunks.push(`<speak>${chunkToPush}</speak>`);
                         
-                        // Pass open tags to the start of the next chunk
                         activeTags = tagsToClose; 
                     }
-                    // Re-open tags at the beginning of the new chunk
                     currentChunk = activeTags.map(t => t.full).join('') + seg + " ";
                 } else {
                     currentChunk += seg + " ";
