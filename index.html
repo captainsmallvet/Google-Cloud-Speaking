@@ -61,7 +61,26 @@
         </div>
     </div>
 
+
+
     <div class="section">
+        <h3 style="color: #fff;">📝 Final Audio Script (Auto-SSML)</h3>
+        <p style="color: #888; margin-top: 0; font-size: 14px;">Paste your English text here. The system will automatically wrap it in SSML tags before generating audio.</p>
+        <div class="row">
+            <input type="file" id="fileScript" accept=".txt" onchange="openFile(event, 'audioScript')">
+            <button onclick="document.getElementById('fileScript').click()">Open (.txt)</button>
+            <button onclick="saveFile('audioScript', 'My_Audio_Script.txt')">Save Script</button>
+            <button onclick="copyElement('audioScript')">Copy</button>
+            <button class="btn-danger" onclick="clearElement('audioScript')">Clear</button>
+            <span class="char-count" id="countScript">0 Chars</span>
+        </div>
+        <textarea id="audioScript" rows="12" placeholder="Example: Struggling with a chaotic mind? This isn't just ancient wisdom; it's the Buddha's precise path to inner peace."></textarea>
+    </div>
+
+    <div class="section">
+        <h3 style="color: #fff;">🎛️ Processing Controls & Sliders</h3>
+       
+    <div>
         <h3 style="color: #fff;">⚙️ Voice Selection</h3>
         <div class="row">
             <label>Voice Model:</label>
@@ -96,23 +115,8 @@
         </div>
     </div>
 
-    <div class="section">
-        <h3 style="color: #fff;">📝 Final Audio Script (Auto-SSML)</h3>
-        <p style="color: #888; margin-top: 0; font-size: 14px;">Paste your English text here. The system will automatically wrap it in SSML tags before generating audio.</p>
-        <div class="row">
-            <input type="file" id="fileScript" accept=".txt" onchange="openFile(event, 'audioScript')">
-            <button onclick="document.getElementById('fileScript').click()">Open (.txt)</button>
-            <button onclick="saveFile('audioScript', 'My_Audio_Script.txt')">Save Script</button>
-            <button onclick="copyElement('audioScript')">Copy</button>
-            <button class="btn-danger" onclick="clearElement('audioScript')">Clear</button>
-            <span class="char-count" id="countScript">0 Chars</span>
-        </div>
-        <textarea id="audioScript" rows="12" placeholder="Example: Struggling with a chaotic mind? This isn't just ancient wisdom; it's the Buddha's precise path to inner peace."></textarea>
-    </div>
 
-    <div class="section">
-        <h3 style="color: #fff;">🎛️ Processing Controls & Sliders</h3>
-        
+ 
         <div class="row">
             <label>Prosody Rate:</label>
             <input type="range" id="ttsRate" min="25" max="400" value="80" oninput="updateSlider('ttsRate', 'rateVal', '%')">
