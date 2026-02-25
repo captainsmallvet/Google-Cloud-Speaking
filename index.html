@@ -5,36 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Cloud Speaking (Pro Version)</title>
     <style>
-        /* Dark Theme UI Design */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; box-sizing: border-box; }
         h1 { background: #1f1f1f; color: #8ab4f8; padding: 15px; text-align: center; border-radius: 8px; margin-top: 0; font-size: 24px; border: 1px solid #333;}
         .section { background: #1e1e1e; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 1px solid #333;}
         .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; align-items: center; }
         .row label { font-weight: bold; min-width: 120px; color: #b3b3b3; }
-        
-        /* Form Elements Dark Mode */
-        input[type="text"], input[type="number"], select, textarea { 
-            padding: 10px; border: 1px solid #444; border-radius: 4px; flex-grow: 1; 
-            font-family: inherit; background-color: #2d2d2d; color: #ffffff; 
-        }
+        input[type="text"], input[type="number"], select, textarea { padding: 10px; border: 1px solid #444; border-radius: 4px; flex-grow: 1; font-family: inherit; background-color: #2d2d2d; color: #ffffff; }
         input::placeholder, textarea::placeholder { color: #888; }
         textarea { width: 100%; resize: vertical; box-sizing: border-box; font-size: 16px; line-height: 1.6; }
-        
-        /* Buttons */
         button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: all 0.2s; background: #444; color: #e0e0e0; }
         button:hover:not(:disabled) { filter: brightness(1.2); }
         button:disabled { opacity: 0.6; cursor: not-allowed; }
-        
         .btn-primary { background: #8ab4f8; color: #121212; }
         .btn-success { background: #81c995; color: #121212; }
         .btn-danger { background: #f28b82; color: #121212; }
-        
-        /* Status & Audio */
         .status-box { background: #202124; color: #a8c7fa; padding: 10px; border-radius: 4px; border: 1px solid #444; font-family: monospace; white-space: pre-wrap; max-height: 150px; overflow-y: auto; }
         input[type="file"] { display: none; }
         audio { filter: invert(0.9) hue-rotate(180deg); }
-
-        /* Character Counter Style */
         .char-count { margin-left: auto; color: #8ab4f8; font-family: monospace; font-size: 14px; font-weight: bold; background: #2d2d2d; padding: 5px 10px; border-radius: 4px; border: 1px solid #444;}
     </style>
 </head>
@@ -69,17 +56,17 @@
                 <option value="gemini-flash-latest">Gemini Flash Latest</option>
                 <option value="gemini-flash-lite-latest">Gemini Flash Lite Latest</option>
                 <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-                <option value="gemini-3-pro-preview">gemini-3-pro-preview</option>
-                <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro Preview</option>
             </select>
         </div>
         <div class="row">
             <label>Cloud TTS Voice:</label>
             <select id="ttsVoice" onchange="loadPreset()">
-                <option value="en-US-Journey-D" selected>en-US-Journey-D (Male - Natural/Deep)</option>
-                <option value="en-US-Studio-Q">en-US-Studio-Q (Male - Studio)</option>
-                <option value="en-US-Journey-F">en-US-Journey-F (Female - Natural)</option>
+                <option value="en-US-Studio-Q" selected>en-US-Studio-Q (Male - Studio)</option>
+                <option value="en-US-Neural2-J">en-US-Neural2-J (Male - Neural2 Deep)</option>
+                <option value="en-US-Neural2-I">en-US-Neural2-I (Male - Neural2 Smooth)</option>
+                <option value="en-US-Neural2-D">en-US-Neural2-D (Male - Neural2 Mature)</option>
                 <option value="en-US-Studio-O">en-US-Studio-O (Female - Studio)</option>
+                <option value="en-US-Journey-D">en-US-Journey-D (Male - Journey)</option>
             </select>
             <label>Format:</label>
             <select id="audioFormat">
@@ -88,10 +75,10 @@
             </select>
         </div>
         <div class="row">
-            <label>Pitch (-20 to 20):</label>
-            <input type="number" id="ttsPitch" value="-2.0" step="0.1">
-            <label>Speaking Rate (0.25 to 4.0):</label>
-            <input type="number" id="ttsRate" value="0.90" step="0.05">
+            <label>API Global Pitch:</label>
+            <input type="number" id="ttsPitch" value="0.0" step="0.1">
+            <label>API Global Rate:</label>
+            <input type="number" id="ttsRate" value="1.0" step="0.05">
             <label>Volume Gain (dB):</label>
             <input type="number" id="ttsVolume" value="0.0" step="0.5">
         </div>
@@ -99,14 +86,12 @@
         <div class="row" style="justify-content: space-between; margin-top: 15px;">
             <label>AI SSML Prompt Preset:</label>
             <select id="promptPresetSelect" onchange="loadPreset()" style="max-width: 400px; border-color: #8ab4f8;">
-                <option value="dhamma">🧘‍♂️ Calm Dhamma Narration (Default)</option>
-                <option value="meditation">🪷 Deep Meditation & Philosophy</option>
-                <option value="commercial">🎬 Energetic Commercial (Sweets/Desserts)</option>
-                <option value="youtube">💻 YouTube Tech/Tutorial Video</option>
+                <option value="dhamma">🧘‍♂️ Calm Dhamma Narration (Rate 30% / No Breaks)</option>
+                <option value="commercial">🎬 Energetic Commercial</option>
             </select>
         </div>
         <div class="row">
-            <textarea id="voicePrompt" rows="8">Please format the SSML for a Buddhist Dhamma narration in English...</textarea>
+            <textarea id="voicePrompt" rows="8">Loading rules...</textarea>
         </div>
     </div>
 
@@ -171,21 +156,27 @@
         let audioChunksBlob = []; 
 
         const promptPresets = {
-            "dhamma": "Please format the SSML for a Buddhist Dhamma narration in English. The tone must be deep, calming, warm, empathetic, and trustworthy. Add appropriate <break time=\"...\"/> for breathing and contemplation.",
-            "meditation": "Format the SSML for a guided meditation or deep philosophical reflection. Use extreme care with pacing. Insert frequent, long <break> tags between thoughts. The voice should be whisper-soft and profoundly serene.",
-            "commercial": "Please format the SSML for a vibrant, energetic video advertisement promoting fun, colorful products. The tone should be enthusiastic, friendly, bright, and inviting. Keep the pacing upbeat.",
-            "youtube": "Format the SSML for a YouTube tutorial. The tone should be clear, articulate, engaging, and professional. Use natural conversational pauses <break time=\"400ms\"/>."
+            "dhamma": "Please format the SSML for a Buddhist Dhamma narration in English. The tone must be deep, calming, warm, empathetic, and trustworthy. Wrap the entire text in a single <prosody rate=\"30%\"> tag. CRITICAL INSTRUCTION: DO NOT use any <break> tags anywhere in the SSML. Let the natural punctuation guide the pauses.",
+            "commercial": "Please format the SSML for an energetic commercial. Keep the pacing upbeat."
         };
 
         function loadPreset() {
             const selected = document.getElementById('promptPresetSelect').value;
+            const voiceName = document.getElementById('ttsVoice').value;
             let basePrompt = promptPresets[selected];
             
             basePrompt += "\n\n*** CRITICAL SSML RULES FOR GOOGLE CLOUD TTS ***\n";
-            basePrompt += "1. NEVER use the 'pitch' attribute.\n";
-            basePrompt += "2. NEVER use <emphasis> tags.\n";
-            basePrompt += "3. For <break> tags, ONLY use whole numbers with 'ms' (e.g., <break time=\"1500ms\"/>). NEVER use decimals like 1.5s.\n";
-            basePrompt += "4. You may use <prosody rate=\"...\"> to control speed, but ensure you ALWAYS close it with </prosody>.";
+            basePrompt += "1. NEVER use <emphasis> tags.\n";
+            
+            if (voiceName.includes('Journey')) {
+                basePrompt += "2. 🚨 CRITICAL: You are generating for a 'Journey' voice. You MUST NOT use <prosody> tags. Use text only.";
+            } else if (voiceName.includes('Neural2')) {
+                basePrompt += "2. You MAY use the 'pitch' attribute in <prosody> (e.g., pitch=\"-10%\") to deepen the tone for this Neural2 voice.\n";
+                basePrompt += "3. Ensure you ALWAYS close <prosody> with </prosody>.";
+            } else {
+                basePrompt += "2. DO NOT use the 'pitch' attribute in SSML, as it is disabled for Studio voices.\n";
+                basePrompt += "3. Ensure you ALWAYS close <prosody> with </prosody>.";
+            }
             
             document.getElementById('voicePrompt').value = basePrompt;
         }
@@ -326,7 +317,7 @@
             return bytes;
         }
 
-        // --- 🚀 THE PERFECTED FETCH FUNCTION FOR ALL VOICES 🚀 ---
+        // --- 🚀 FETCH FUNCTION WITH NEURAL2 PITCH SUPPORT 🚀 ---
         async function fetchTTS(ssmlText) {
             const voiceName = document.getElementById('ttsVoice').value;
             const key = document.getElementById('cloudKey').value.trim();
@@ -337,29 +328,21 @@
                 audioConfig: { audioEncoding: format }
             };
 
-            // 3. แยกสมองการจัดการตามรุ่นเสียง
             if (voiceName.includes('Journey')) {
-                // โหมด Journey: ถอดร่าง SSML เป็นข้อความธรรมดา (Plain Text)
                 let plainText = ssmlText;
-                
-                // ✨ ไฮไลท์: แทนที่ <break> ด้วยการขึ้นย่อหน้าใหม่ (\n\n) เพื่อให้ AI หยุดพักหายใจอย่างเป็นธรรมชาติ (และไม่อ่านว่าดอท)
                 plainText = plainText.replace(/<break[^>]*>/gi, '\n\n');
-                
-                // ลบแท็กอื่นๆ ออกให้หมด (<speak>, <prosody>, ฯลฯ) เพราะ Journey ไม่รองรับ SSML เลย!
                 plainText = plainText.replace(/<[^>]+>/g, '');
-                
-                // คลีนช่องว่าง \n ที่ซ้อนกันให้สวยงาม
                 plainText = plainText.replace(/\n\s*\n/g, '\n\n');
-
                 payload.input = { text: plainText.trim() };
-                
-                // *ไม่ต้องส่งค่า pitch/rate ไปใน audioConfig เพราะ Journey ไม่รองรับ*
-                
             } else {
-                // โหมด Studio: ซ่อมแซม prosody ที่ค้าง และให้ส่งค่า pitch/rate เพิ่มเติมได้
                 let cleanSSML = ssmlText;
                 cleanSSML = cleanSSML.replace(/<emphasis[^>]*>/gi, '').replace(/<\/emphasis>/gi, '');
-                cleanSSML = cleanSSML.replace(/pitch="[^"]*"/gi, ''); 
+                
+                // ✨ ไฮไลท์: อนุญาตให้เก็บคำสั่ง Pitch ไว้ได้เฉพาะเมื่อใช้เสียง Neural2!
+                if (!voiceName.includes('Neural2')) {
+                    cleanSSML = cleanSSML.replace(/pitch="[^"]*"/gi, ''); 
+                }
+
                 cleanSSML = cleanSSML.replace(/time="(\d*\.?\d+)s"/gi, (match, p1) => {
                     return 'time="' + Math.round(parseFloat(p1) * 1000) + 'ms"';
                 });
@@ -378,7 +361,6 @@
 
                 payload.input = { ssml: cleanSSML };
                 
-                // แนบการตั้งค่า Pitch/Rate เฉพาะเสียง Studio
                 payload.audioConfig.pitch = parseFloat(document.getElementById('ttsPitch').value);
                 payload.audioConfig.speakingRate = parseFloat(document.getElementById('ttsRate').value);
                 payload.audioConfig.volumeGainDb = parseFloat(document.getElementById('ttsVolume').value);
