@@ -61,8 +61,6 @@
         </div>
     </div>
 
-
-
     <div class="section">
         <h3 style="color: #fff;">📝 Final Audio Script (Auto-SSML)</h3>
         <p style="color: #888; margin-top: 0; font-size: 14px;">Paste your English text here. The system will automatically wrap it in SSML tags before generating audio.</p>
@@ -113,8 +111,6 @@
         </div>
     </div>
 
-
- 
         <div class="row">
             <label>Prosody Rate:</label>
             <input type="range" id="ttsRate" min="25" max="400" value="80" oninput="updateSlider('ttsRate', 'rateVal', '%')">
@@ -263,7 +259,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // --- NEW: Optional Text Refiner (Saves API Quota by not forcing SSML) ---
         async function refineText() {
             const key = document.getElementById('geminiKey').value.trim();
             if(!key) return alert('Please enter Google AI Studio API key.');
@@ -291,7 +286,6 @@
                 
                 let resultText = data.candidates[0].content.parts[0].text.trim();
                 
-                // Set the refined text directly into the main Audio Script box
                 document.getElementById('audioScript').value = resultText;
                 updateCharCount('audioScript', 'countScript');
                 
@@ -341,7 +335,7 @@
                 voice: { languageCode: "en-US", name: voiceName },
                 audioConfig: { 
                     audioEncoding: format,
-                    volumeGainDb: volumeDb // Volume is handled globally via API
+                    volumeGainDb: volumeDb 
                 }
             };
 
@@ -351,9 +345,12 @@
             if (voiceName.includes('Journey')) {
                 // Journey Mode: Plain text only, no prosody allowed
                 payload.input = { text: cleanText };
+            } else if (voiceName.includes('Studio')) {
+                // 🚨 Studio Mode: Rate is allowed, but Pitch is STRICTLY FORBIDDEN!
+                let wrappedSSML = `<speak>\n<prosody rate="${rateStr}">\n${cleanText}\n</prosody>\n</speak>`;
+                payload.input = { ssml: wrappedSSML };
             } else {
-                // Studio & Neural2 Mode: Auto-Wrap with Prosody Tags
-                // Note: Studio ignores pitch automatically, Neural2 respects it.
+                // ✅ Neural2 Mode: Supports both rate and pitch perfectly
                 let wrappedSSML = `<speak>\n<prosody rate="${rateStr}" pitch="${pitchStr}">\n${cleanText}\n</prosody>\n</speak>`;
                 payload.input = { ssml: wrappedSSML };
             }
@@ -368,11 +365,9 @@
             return data.audioContent;
         }
 
-        // --- NEW CHUNKING: Simple Text Split (No SSML parsing needed anymore!) ---
         function chunkText(text, maxChars) {
             let chunks = [];
             let currentChunk = "";
-            // Split by sentence endings (., !, ?, \n)
             let segments = text.split(/(?<=\.|\?|\!|\n)\s+/); 
             
             for(let seg of segments) {
@@ -400,7 +395,6 @@
             logStatus("Generating Preview...");
             isProcessing = true;
             try {
-                // Get just the first few sentences for preview
                 let segments = text.split(/(?<=\.|\?|\!|\n)\s+/);
                 let previewText = segments.slice(0, 5).join(' ').trim();
                 
@@ -428,7 +422,6 @@
             const baseDelay = parseFloat(document.getElementById('batchDelay').value) * 1000;
             const format = document.getElementById('audioFormat').value === 'MP3' ? 'audio/mpeg' : 'audio/wav';
 
-            // Split raw text into chunks safely
             const chunks = chunkText(text, batchSize);
             logStatus(`Starting generation. Total batches: ${chunks.length}`);
             
