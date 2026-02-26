@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Cloud Speaking (Ultimate Studio Version)</title>
+    <title>Google Cloud Speaking (Ultimate Dhamma HD)</title>
     <style>
         /* Dark Theme UI Design */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; box-sizing: border-box; }
         h1 { background: #1f1f1f; color: #8ab4f8; padding: 15px; text-align: center; border-radius: 8px; margin-top: 0; font-size: 24px; border: 1px solid #333;}
         .section { background: #1e1e1e; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 1px solid #333;}
         .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; align-items: center; }
-        .row label { font-weight: bold; min-width: 130px; color: #b3b3b3; }
+        .row label { font-weight: bold; min-width: 140px; color: #b3b3b3; }
         
-        /* Form Elements Dark Mode */
         input[type="text"], input[type="number"], select, textarea { 
             padding: 10px; border: 1px solid #444; border-radius: 4px; flex-grow: 1; 
             font-family: inherit; background-color: #2d2d2d; color: #ffffff; 
@@ -20,11 +19,9 @@
         input::placeholder, textarea::placeholder { color: #888; }
         textarea { width: 100%; resize: vertical; box-sizing: border-box; font-size: 16px; line-height: 1.6; }
         
-        /* Sliders */
         input[type="range"] { flex-grow: 1; accent-color: #8ab4f8; cursor: pointer; }
-        .val-display { background: #333; padding: 5px 10px; border-radius: 4px; font-family: monospace; font-weight: bold; min-width: 60px; text-align: center; color: #8ab4f8;}
+        .val-display { background: #333; padding: 5px 10px; border-radius: 4px; font-family: monospace; font-weight: bold; min-width: 65px; text-align: center; color: #8ab4f8;}
 
-        /* Buttons */
         button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: all 0.2s; background: #444; color: #e0e0e0; }
         button:hover:not(:disabled) { filter: brightness(1.2); }
         button:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -34,21 +31,28 @@
         .btn-danger { background: #f28b82; color: #121212; }
         .btn-warning { background: #f6aea9; color: #121212; }
         
-        /* Status & Audio */
         .status-box { background: #202124; color: #a8c7fa; padding: 10px; border-radius: 4px; border: 1px solid #444; font-family: monospace; white-space: pre-wrap; max-height: 150px; overflow-y: auto; }
         input[type="file"] { display: none; }
         audio { filter: invert(0.9) hue-rotate(180deg); width: 100%; }
-
-        /* Character Counter Style */
         .char-count { margin-left: auto; color: #8ab4f8; font-family: monospace; font-size: 14px; font-weight: bold; background: #2d2d2d; padding: 5px 10px; border-radius: 4px; border: 1px solid #444;}
     </style>
 </head>
 <body>
 
-    <h1>🎙️ Google Cloud Speaking (Ultimate Studio)</h1>
+    <h1>🎙️ Google Cloud Speaking (Ultimate Dhamma HD)</h1>
 
     <div class="section">
-        <h3 style="color: #fff;">🔑 API Key Management</h3>
+        <h3 style="color: #fff;">🔑 API Key & Model Management</h3>
+        <div class="row">
+            <label>Text Reasoning Model:</label>
+            <select id="geminiModel">
+                <option value="gemini-3.1-pro-preview" selected>Gemini 3.1 Pro Preview (Latest)</option>
+                <option value="gemini-3.1-flash-preview">Gemini 3.1 Flash Preview</option>
+                <option value="gemini-flash-latest">Gemini Flash Latest</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Stable)</option>
+            </select>
+            <button onclick="saveKey('geminiModel')">Save</button>
+        </div>
         <div class="row">
             <label>Google Cloud TTS:</label>
             <input type="text" id="cloudKey" placeholder="Required for Audio Generation">
@@ -56,70 +60,94 @@
         </div>
         <div class="row">
             <label>Google AI Studio:</label>
-            <input type="text" id="geminiKey" placeholder="Optional (Only needed if using AI Text Refiner)">
+            <input type="text" id="geminiKey" placeholder="Required for Dhamma Refiner">
             <button onclick="saveKey('geminiKey')">Save</button>
+        </div>
+    </div>
+
+    <div class="section" style="border-color: #f6aea9;">
+        <h3 style="color: #f6aea9;">🤖 AI Text Refiner (Dhamma Scriptwriter)</h3>
+        <p style="color: #888; font-size: 14px; margin-top: 0;">ใช้เกลาบทภาษาอังกฤษเพื่อคุมจังหวะเอื้อนเสียง (ระบบจะช่วยใส่เครื่องหมายเพื่อให้พูดช้าลงอย่างนุ่มนวล)</p>
+        <div class="row">
+            <label>Dhamma Style:</label>
+            <select id="promptPresetSelect" onchange="loadPreset()" style="flex-grow: 2;">
+                <option value="dhamma_general" selected>🧘‍♂️ บรรยายธรรม ( meditative & reflective )</option>
+                <option value="dhamma_metta">💗 เน้นความเมตตา ( Warm, Soft & Kind )</option>
+                <option value="dhamma_solitude">🍃 เน้นความสงบวิเวก ( Quiet, Sparse & Very Slow )</option>
+                <option value="dhamma_explain">📖 อธิบายธรรมะ ( Clear & Profound )</option>
+                <option value="grammar">✍️ เกลาภาษาอังกฤษทั่วไป ( Standard English )</option>
+            </select>
+        </div>
+        <div class="row">
+            <textarea id="voicePrompt" rows="3" style="background-color: #1a1a1a;"></textarea>
+        </div>
+        <div class="row">
+            <input type="file" id="fileRefiner" accept=".txt" onchange="openRefinerFile(event)">
+            <button onclick="document.getElementById('fileRefiner').click()">Open (.txt)</button>
+            <button onclick="saveRefinerFile()">Save</button>
+            <button onclick="copyElement('draftScript')">Copy</button>
+            <button class="btn-danger" onclick="clearElement('draftScript')">Clear</button>
+            <button class="btn-primary" onclick="postToScript()" style="margin-left: auto;">🚀 Post to Script</button>
+        </div>
+        <textarea id="draftScript" rows="8" placeholder="วางบทภาษาอังกฤษดิบที่นี่..."></textarea>
+        <div class="row" style="margin-top: 10px;">
+            <button class="btn-warning" id="btnRefine" onclick="refineText()" style="width: 100%; font-size: 18px;">✨ Refine & Meditate Script (Gemini AI)</button>
         </div>
     </div>
 
     <div class="section">
         <h3 style="color: #fff;">📝 Final Audio Script (Auto-SSML)</h3>
-        <p style="color: #888; margin-top: 0; font-size: 14px;">Paste your English text here. The system will automatically wrap it in SSML tags before generating audio.</p>
         <div class="row">
             <input type="file" id="fileScript" accept=".txt" onchange="openFile(event, 'audioScript')">
             <button onclick="document.getElementById('fileScript').click()">Open (.txt)</button>
-            <button onclick="saveFile('audioScript', 'My_Audio_Script.txt')">Save Script</button>
+            <button onclick="saveFile('audioScript', 'My_Final_Script.txt')">Save Script</button>
             <button onclick="copyElement('audioScript')">Copy</button>
             <button class="btn-danger" onclick="clearElement('audioScript')">Clear</button>
             <span class="char-count" id="countScript">0 Chars</span>
         </div>
-        <textarea id="audioScript" rows="12" placeholder="Example: Struggling with a chaotic mind? This isn't just ancient wisdom; it's the Buddha's precise path to inner peace."></textarea>
+        <textarea id="audioScript" rows="12" placeholder="สคริปต์ที่พร้อมสำหรับการเจนเสียงจะแสดงที่นี่..."></textarea>
     </div>
 
     <div class="section">
         <h3 style="color: #fff;">🎛️ Processing Controls & Sliders</h3>
        
-    <div>
-        <h3 style="color: #fff;">⚙️ Voice Selection</h3>
         <div class="row">
-            <label>Voice Model:</label>
+            <label>Voice Selection:</label>
             <select id="ttsVoice">
-                <optgroup label="Neural2 (Recommended - High Quality & Pitch Adjustable)">
-                    <option value="en-US-Neural2-J" selected>en-US-Neural2-J (Male - Deep/Authoritative)</option>
-                    <option value="en-US-Neural2-I">en-US-Neural2-I (Male - Smooth/Calm)</option>
-                    <option value="en-US-Neural2-D">en-US-Neural2-D (Male - Mature)</option>
-                    <option value="en-US-Neural2-A">en-US-Neural2-A (Male - Standard)</option>
-                    <option value="en-US-Neural2-C">en-US-Neural2-C (Female - Soft)</option>
-                    <option value="en-US-Neural2-E">en-US-Neural2-E (Female - Articulate)</option>
-                    <option value="en-US-Neural2-F">en-US-Neural2-F (Female - Bright)</option>
-                    <option value="en-US-Neural2-G">en-US-Neural2-G (Female - Gentle)</option>
-                    <option value="en-US-Neural2-H">en-US-Neural2-H (Female - Warm)</option>
+                <optgroup label="Chirp 3 HD (Best Realism & Natural Pacing)">
+                    <option value="en-US-Chirp3-HD-Charon" selected>en-US-Chirp3-HD-Charon (Male - Deep)</option>
+                    <option value="en-US-Chirp3-HD-Puck">en-US-Chirp3-HD-Puck (Male - Soft)</option>
+                    <option value="en-US-Chirp3-HD-Aoede">en-US-Chirp3-HD-Aoede (Female - Warm)</option>
+                    <option value="en-US-Chirp3-HD-Zephyr">en-US-Chirp3-HD-Zephyr (Female - Clear)</option>
+                </optgroup>
+                <optgroup label="Journey (Natural Emotion)">
+                    <option value="en-US-Journey-D">en-US-Journey-D (Male)</option>
+                    <option value="en-US-Journey-F">en-US-Journey-F (Female)</option>
+                </optgroup>
+                <optgroup label="Neural2 (High Quality & Pitch Adjustable)">
+                    <option value="en-US-Neural2-J">en-US-Neural2-J (Male - Deep)</option>
+                    <option value="en-US-Neural2-I">en-US-Neural2-I (Male - Calm)</option>
                 </optgroup>
                 <optgroup label="Studio (High Quality - Fixed Pitch)">
-                    <option value="en-US-Studio-Q">en-US-Studio-Q (Male - Studio Broadcast)</option>
-                    <option value="en-US-Studio-O">en-US-Studio-O (Female - Studio Broadcast)</option>
-                </optgroup>
-                <optgroup label="Journey (Natural AI - No Prosody Allowed)">
-                    <option value="en-US-Journey-D">en-US-Journey-D (Male - Natural)</option>
-                    <option value="en-US-Journey-F">en-US-Journey-F (Female - Natural)</option>
+                    <option value="en-US-Studio-Q">en-US-Studio-Q (Male)</option>
                 </optgroup>
             </select>
             <label>Format:</label>
             <select id="audioFormat">
-                <option value="MP3" selected>MP3 (Best for long audio)</option>
-                <option value="LINEAR16">WAV (High Quality)</option>
+                <option value="MP3" selected>MP3</option>
+                <option value="LINEAR16">WAV</option>
             </select>
         </div>
-    </div>
 
         <div class="row">
             <label>Prosody Rate:</label>
-            <input type="range" id="ttsRate" min="25" max="400" value="80" oninput="updateSlider('ttsRate', 'rateVal', '%')">
+            <input type="range" id="ttsRate" min="20" max="200" value="80" oninput="updateSlider('ttsRate', 'rateVal', '%')">
             <span class="val-display" id="rateVal">80%</span>
         </div>
         <div class="row">
             <label>Prosody Pitch:</label>
-            <input type="range" id="ttsPitch" min="-20" max="20" value="5" oninput="updateSlider('ttsPitch', 'pitchVal', '%')">
-            <span class="val-display" id="pitchVal">5%</span>
+            <input type="range" id="ttsPitch" min="-25" max="25" value="0" oninput="updateSlider('ttsPitch', 'pitchVal', '%')">
+            <span class="val-display" id="pitchVal">0%</span>
         </div>
         <div class="row">
             <label>Volume Gain:</label>
@@ -127,7 +155,7 @@
             <span class="val-display" id="volVal">0 dB</span>
         </div>
 
-        <div class="row" style="margin-top: 20px;">
+        <div class="row" style="margin-top: 20px; border-top: 1px solid #333; padding-top: 15px;">
             <label>Batch Size (Chars):</label>
             <input type="number" id="batchSize" value="3500">
             <label>Inter-batch Delay (Sec):</label>
@@ -135,45 +163,14 @@
         </div>
         
         <div class="row" style="margin-top: 15px;">
-            <button class="btn-primary" onclick="previewAudio()">▶️ Preview Audio (First chunk)</button>
+            <button class="btn-primary" onclick="previewAudio()">▶️ Preview Audio (First 3 sentences)</button>
             <button class="btn-success" onclick="startGeneration()">🚀 Generate Full Audio</button>
             <button class="btn-danger" onclick="stopProcess()">⏹️ Stop</button>
         </div>
         
-        <h4 style="color: #fff; margin-bottom: 5px;">Status Log:</h4>
-        <div id="statusLog" class="status-box">Ready.</div>
-
-        <h4 style="color: #fff; margin-bottom: 5px;">Audio Output:</h4>
-        <div class="row">
-            <audio id="audioPlayer" controls></audio>
-        </div>
-        <div class="row">
-            <button class="btn-success" id="downloadBtn" onclick="downloadAudio()" disabled>💾 Download Audio</button>
-        </div>
-    </div>
-
-    <div class="section" style="border-color: #555;">
-        <h3 style="color: #fff;">🤖 AI Text Refiner (Optional: English Corrector)</h3>
-        <p style="color: #888; font-size: 14px; margin-top: 0;">Use this section ONLY if you want Gemini to correct grammar or improve the tone of your text. It outputs plain text to be copied into the Audio Script above.</p>
-        <div class="row">
-            <select id="geminiModel">
-                <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview</option>
-                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-            </select>
-            <select id="promptPresetSelect" onchange="loadPreset()" style="flex-grow: 2;">
-                <option value="dhamma">🧘‍♂️ Improve Grammar & Apply Dhamma Tone</option>
-                <option value="grammar">✍️ Just Correct Grammar</option>
-            </select>
-        </div>
-        <div class="row">
-            <textarea id="voicePrompt" rows="3"></textarea>
-        </div>
-        <div class="row">
-            <textarea id="draftScript" rows="6" placeholder="Paste rough draft here..."></textarea>
-        </div>
-        <div class="row">
-            <button class="btn-warning" id="btnRefine" onclick="refineText()">✨ Refine Text via Gemini</button>
-        </div>
+        <div id="statusLog" class="status-box" style="margin-top: 15px;">Ready.</div>
+        <audio id="audioPlayer" controls style="margin-top: 15px;"></audio>
+        <button class="btn-success" id="downloadBtn" onclick="downloadAudio()" disabled style="width: 100%; margin-top: 10px;">💾 Download Audio</button>
     </div>
 
     <script>
@@ -181,48 +178,42 @@
         let audioChunksBlob = []; 
 
         const promptPresets = {
-            "dhamma": "Rewrite the following text for a Buddhist Dhamma narration. Correct any grammatical errors. Make the English natural, flowing, and profound. The tone must be deep, calming, warm, empathetic, and trustworthy. DO NOT output any markdown, XML, or SSML tags. Output ONLY the refined plain text.",
-            "grammar": "Correct the grammar and punctuation of the following English text. Make it sound natural for a native speaker. Output ONLY the refined plain text without any formatting or conversational filler."
+            "dhamma_general": "Rewrite the following text for a meditative Buddhist Dhamma narration. Use profound and empathetic English. IMPORTANT: To slow down the AI and add 'soul', insert commas (,) more frequently for natural pauses, and use ellipses (...) at the end of key insights to make the voice draw out and soften (prolongation). Output ONLY the refined plain text.",
+            "dhamma_metta": "Rewrite for a Loving-Kindness (Metta) meditation tone. Use warm, soft, and gentle language. Insert many commas (,) and ellipses (...) specifically after words like 'love', 'peace', and 'kindness' to force the AI to elongate those sounds beautifully. Output ONLY plain text.",
+            "dhamma_solitude": "Rewrite to evoke a sense of quiet solitude and inner peace. Use minimal but powerful words. Place ellipses (...) frequently between phrases to create long, meditative silences. The pace must feel very slow and still. Output ONLY plain text.",
+            "dhamma_explain": "Rewrite as a clear, wise Dhamma explanation. Break complex ideas into shorter, reflective sentences. Use commas (,) to separate logical steps and ellipses (...) to end sections. Output ONLY plain text.",
+            "grammar": "Correct the grammar and punctuation. Output ONLY plain text."
         };
 
         function loadPreset() {
-            document.getElementById('voicePrompt').value = promptPresets[document.getElementById('promptPresetSelect').value];
+            const selected = document.getElementById('promptPresetSelect').value;
+            document.getElementById('voicePrompt').value = promptPresets[selected] || "";
         }
 
         function updateSlider(sliderId, displayId, suffix) {
             let val = document.getElementById(sliderId).value;
-            if (val > 0 && suffix === '%') val = '+' + val;
-            if (val > 0 && suffix === ' dB') val = '+' + val;
+            if (val > 0 && (suffix === '%' || suffix === ' dB')) val = '+' + val;
             document.getElementById(displayId).innerText = val + suffix;
         }
         
         window.onload = () => {
             loadKey('geminiKey');
             loadKey('cloudKey');
+            loadKey('geminiModel');
             updateCharCount('audioScript', 'countScript');
             loadPreset(); 
         };
 
         document.getElementById('audioScript').addEventListener('input', () => updateCharCount('audioScript', 'countScript'));
 
-        function updateCharCount(inputId, displayId) {
-            const textLength = document.getElementById(inputId).value.length;
-            document.getElementById(displayId).innerText = `${textLength.toLocaleString()} Chars`;
-        }
-
         function saveKey(id) {
             const val = document.getElementById(id).value.trim();
-            if(val) { localStorage.setItem(id, val); alert('Key saved.'); }
+            if(val) { localStorage.setItem(id, val); alert('Settings Saved.'); }
         }
         function loadKey(id) {
             const val = localStorage.getItem(id);
             if(val) document.getElementById(id).value = val;
         }
-        function clearKey(id) {
-            localStorage.removeItem(id);
-            document.getElementById(id).value = '';
-        }
-
         function copyElement(id) {
             const el = document.getElementById(id);
             navigator.clipboard.writeText(el.value).then(() => alert('Copied to clipboard.'));
@@ -237,6 +228,80 @@
             box.scrollTop = box.scrollHeight;
         }
 
+        // --- Refiner Functions ---
+        function openRefinerFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const target = document.getElementById('draftScript');
+                const startPos = target.selectionStart;
+                target.value = target.value.substring(0, startPos) + e.target.result + target.value.substring(target.selectionEnd, target.value.length);
+            };
+            reader.readAsText(file);
+            event.target.value = ''; 
+        }
+
+        function saveRefinerFile() {
+            const text = document.getElementById('draftScript').value;
+            if(!text) return alert("Nothing to save!");
+            const blob = new Blob([text], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = "AI_Text_Refiner.txt"; a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function postToScript() {
+            const content = document.getElementById('draftScript').value;
+            if(!content.trim()) return alert("Draft is empty!");
+            document.getElementById('audioScript').value = content;
+            updateCharCount('audioScript', 'countScript');
+            alert("Posted to Final Script!");
+        }
+
+        async function refineText() {
+            const key = document.getElementById('geminiKey').value.trim();
+            if(!key) return alert('Enter Gemini API key.');
+            const script = document.getElementById('draftScript').value.trim();
+            if(!script) return alert('Draft is empty.');
+            
+            const btn = document.getElementById('btnRefine');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Meditating on Text...';
+            btn.disabled = true;
+
+            const model = document.getElementById('geminiModel').value;
+            const instruction = document.getElementById('voicePrompt').value;
+            const fullPrompt = `${instruction}\n\nTEXT:\n${script}`;
+
+            logStatus(`Connecting to Gemini (${model})...`);
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
+                });
+                const data = await response.json();
+                if(data.error) throw new Error(data.error.message);
+                
+                let resultText = data.candidates[0].content.parts[0].text.trim();
+                resultText = resultText.replace(/^```[a-z]*\n/i, '').replace(/\n```$/i, '');
+
+                document.getElementById('audioScript').value = resultText;
+                updateCharCount('audioScript', 'countScript');
+                logStatus("Refinement Successful. Text moved to Final Script.");
+                alert("Refined successfully!");
+            } catch (err) {
+                logStatus(`Error: ${err.message}`);
+                alert(`Failed: ${err.message}`);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- TTS Engine ---
         function openFile(event, targetId) {
             const file = event.target.files[0];
             if (!file) return;
@@ -249,9 +314,9 @@
             reader.readAsText(file);
             event.target.value = ''; 
         }
+
         function saveFile(sourceId, filename) {
             const text = document.getElementById(sourceId).value;
-            if(!text) return alert("Nothing to save!");
             const blob = new Blob([text], { type: "text/plain" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
@@ -259,100 +324,36 @@
             URL.revokeObjectURL(url);
         }
 
-        async function refineText() {
-            const key = document.getElementById('geminiKey').value.trim();
-            if(!key) return alert('Please enter Google AI Studio API key.');
-            const script = document.getElementById('draftScript').value.trim();
-            if(!script) return alert('Draft script is empty.');
-            
-            const btn = document.getElementById('btnRefine');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '⏳ Refining...';
-            btn.disabled = true;
-
-            const model = document.getElementById('geminiModel').value;
-            const instruction = document.getElementById('voicePrompt').value;
-            const fullPrompt = `System instructions: ${instruction}\n\nText to refine:\n${script}`;
-
-            logStatus("Sending text to AI for refinement...");
-            try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
-                });
-                const data = await response.json();
-                if(data.error) throw new Error(data.error.message);
-                
-                let resultText = data.candidates[0].content.parts[0].text.trim();
-                
-                document.getElementById('audioScript').value = resultText;
-                updateCharCount('audioScript', 'countScript');
-                
-                logStatus("Text refinement complete. Ready for Audio Generation.");
-                alert("Refined text has been placed in the Final Audio Script box!");
-            } catch (err) {
-                logStatus(`Error refining text: ${err.message}`);
-                alert("Error: " + err.message);
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
-        }
-
-        const delay = ms => new Promise(res => setTimeout(res, ms));
-
-        function stopProcess() {
-            if(isProcessing) {
-                isProcessing = false;
-                logStatus("Process interrupted. Compiling generated audio...");
-            }
-        }
-
-        function base64ToUint8Array(base64) {
-            const binaryString = window.atob(base64);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            return bytes;
-        }
-
-        // --- 🚀 THE AUTO-SSML WRAPPER & FETCH FUNCTION 🚀 ---
         async function fetchTTS(rawTextChunk) {
             const voiceName = document.getElementById('ttsVoice').value;
             const key = document.getElementById('cloudKey').value.trim();
             const format = document.getElementById('audioFormat').value;
             
-            // Get Slider Values
-            const rateStr = document.getElementById('ttsRate').value + "%";
-            let pitchValue = document.getElementById('ttsPitch').value;
-            const pitchStr = (pitchValue > 0 ? "+" + pitchValue : pitchValue) + "%";
+            const rateVal = parseFloat(document.getElementById('ttsRate').value) / 100;
+            const pitchVal = parseFloat(document.getElementById('ttsPitch').value);
             const volumeDb = parseFloat(document.getElementById('ttsVolume').value);
 
             let payload = {
                 voice: { languageCode: "en-US", name: voiceName },
                 audioConfig: { 
                     audioEncoding: format,
-                    volumeGainDb: volumeDb 
+                    volumeGainDb: volumeDb,
+                    speakingRate: rateVal,
+                    pitch: (voiceName.includes('Studio')) ? 0 : pitchVal
                 }
             };
 
-            // Remove any accidental HTML/XML tags from the raw text to be safe
             let cleanText = rawTextChunk.replace(/<[^>]+>/g, '').trim();
 
-            if (voiceName.includes('Journey')) {
-                // Journey Mode: Plain text only, no prosody allowed
+            if (voiceName.includes('Chirp3') || voiceName.includes('Journey')) {
+                // Chirp 3 HD & Journey: Best with text input + API config
                 payload.input = { text: cleanText };
             } else if (voiceName.includes('Studio')) {
-                // 🚨 Studio Mode: Rate is allowed, but Pitch is STRICTLY FORBIDDEN!
-                let wrappedSSML = `<speak>\n<prosody rate="${rateStr}">\n${cleanText}\n</prosody>\n</speak>`;
-                payload.input = { ssml: wrappedSSML };
+                // Studio: SSML prosody rate ONLY
+                payload.input = { ssml: `<speak><prosody rate="${rateVal*100}%">${cleanText}</prosody></speak>` };
             } else {
-                // ✅ Neural2 Mode: Supports both rate and pitch perfectly
-                let wrappedSSML = `<speak>\n<prosody rate="${rateStr}" pitch="${pitchStr}">\n${cleanText}\n</prosody>\n</speak>`;
-                payload.input = { ssml: wrappedSSML };
+                // Neural2: SSML prosody rate & pitch
+                payload.input = { ssml: `<speak><prosody rate="${rateVal*100}%" pitch="${(pitchVal >= 0 ? '+' : '') + pitchVal}%">${cleanText}</prosody></speak>` };
             }
 
             const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${key}`, {
@@ -367,117 +368,94 @@
 
         function chunkText(text, maxChars) {
             let chunks = [];
-            let currentChunk = "";
             let segments = text.split(/(?<=\.|\?|\!|\n)\s+/); 
-            
+            let current = "";
             for(let seg of segments) {
                 if(!seg.trim()) continue;
-                if((currentChunk.length + seg.length) > maxChars) {
-                    if(currentChunk.trim()) {
-                        chunks.push(currentChunk.trim());
-                    }
-                    currentChunk = seg + " ";
+                if((current.length + seg.length) > maxChars) {
+                    chunks.push(current.trim());
+                    current = seg + " ";
                 } else {
-                    currentChunk += seg + " ";
+                    current += seg + " ";
                 }
             }
-            if(currentChunk.trim()) {
-                chunks.push(currentChunk.trim());
-            }
+            if(current) chunks.push(current.trim());
             return chunks;
         }
 
         async function previewAudio() {
-            if(!document.getElementById('cloudKey').value) return alert("Missing Google Cloud API Key.");
             let text = document.getElementById('audioScript').value;
-            if(!text.trim()) return alert("No script to preview.");
-            
+            if(!text.trim()) return;
             logStatus("Generating Preview...");
             isProcessing = true;
             try {
                 let segments = text.split(/(?<=\.|\?|\!|\n)\s+/);
-                let previewText = segments.slice(0, 5).join(' ').trim();
-                
+                let previewText = segments.slice(0, 3).join(' ').trim();
                 const audioBase64 = await fetchTTS(previewText);
                 const format = document.getElementById('audioFormat').value === 'MP3' ? 'audio/mpeg' : 'audio/wav';
                 const audioBlob = new Blob([base64ToUint8Array(audioBase64)], { type: format });
-                
-                const audioUrl = URL.createObjectURL(audioBlob);
-                const player = document.getElementById('audioPlayer');
-                player.src = audioUrl;
-                player.play();
-                logStatus("Preview ready and playing.");
-            } catch(e) {
-                logStatus("Preview Error: " + e.message);
-            }
+                document.getElementById('audioPlayer').src = URL.createObjectURL(audioBlob);
+                document.getElementById('audioPlayer').play();
+                logStatus("Preview Playing.");
+            } catch(e) { logStatus("Error: " + e.message); }
             isProcessing = false;
         }
 
         async function startGeneration() {
-            if(!document.getElementById('cloudKey').value) return alert("Missing Google Cloud API Key.");
             let text = document.getElementById('audioScript').value;
-            if(!text.trim()) return alert("No script to process.");
+            if(!text.trim()) return alert("Script is empty!");
 
             const batchSize = parseInt(document.getElementById('batchSize').value);
-            const baseDelay = parseFloat(document.getElementById('batchDelay').value) * 1000;
+            const batchDelay = parseFloat(document.getElementById('batchDelay').value) * 1000;
             const format = document.getElementById('audioFormat').value === 'MP3' ? 'audio/mpeg' : 'audio/wav';
 
             const chunks = chunkText(text, batchSize);
-            logStatus(`Starting generation. Total batches: ${chunks.length}`);
-            
             isProcessing = true;
             audioChunksBlob = []; 
-            document.getElementById('downloadBtn').disabled = true;
+            logStatus(`🚀 Generating Full Audio (${chunks.length} batches)...`);
 
             for(let i = 0; i < chunks.length; i++) {
                 if(!isProcessing) break; 
-
                 logStatus(`Processing Batch ${i+1}/${chunks.length}...`);
-                
                 try {
                     const audioBase64 = await fetchTTS(chunks[i]);
                     audioChunksBlob.push(base64ToUint8Array(audioBase64));
-                    
                     if(i < chunks.length - 1 && isProcessing) {
-                        const jitter = Math.random() * 2000;
-                        const waitTime = baseDelay + jitter;
-                        logStatus(`Waiting ${(waitTime/1000).toFixed(1)}s before next batch...`);
-                        await delay(waitTime);
+                        await new Promise(r => setTimeout(r, batchDelay + Math.random()*1000));
                     }
-                } catch(e) {
-                    logStatus(`Error on batch ${i+1}: ${e.message}`);
-                    isProcessing = false;
-                    break;
-                }
+                } catch(e) { logStatus(`Error: ${e.message}`); isProcessing = false; break; }
             }
+            if(audioChunksBlob.length > 0) compileAudio(format);
+        }
 
-            compileAudio(format);
+        function stopProcess() { isProcessing = false; logStatus("⏹️ Stop requested."); }
+        function base64ToUint8Array(b64) {
+            const bin = window.atob(b64);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            return bytes;
         }
 
         function compileAudio(mimeType) {
-            if(audioChunksBlob.length === 0) {
-                logStatus("No audio generated.");
-                return;
-            }
             logStatus("Compiling audio chunks...");
-            
             const finalBlob = new Blob(audioChunksBlob, { type: mimeType });
-            const audioUrl = URL.createObjectURL(finalBlob);
-            
-            const player = document.getElementById('audioPlayer');
-            player.src = audioUrl;
-            
+            const url = URL.createObjectURL(finalBlob);
+            document.getElementById('audioPlayer').src = url;
             const dBtn = document.getElementById('downloadBtn');
             dBtn.onclick = () => {
                 const a = document.createElement("a");
-                a.href = audioUrl;
-                a.download = `Dhamma_Audio_${new Date().getTime()}.${mimeType === 'audio/mpeg' ? 'mp3' : 'wav'}`;
+                a.href = url;
+                a.download = `Dhamma_Audio_${Date.now()}.${mimeType === 'audio/mpeg' ? 'mp3' : 'wav'}`;
                 a.click();
             };
             dBtn.disabled = false;
-            
             isProcessing = false;
-            logStatus(`✅ Processing Complete! You can now play or download the audio.`);
+            logStatus("✅ Complete! You can play or download now.");
+        }
+
+        function updateCharCount(inputId, displayId) {
+            const textLength = document.getElementById(inputId).value.length;
+            document.getElementById(displayId).innerText = `${textLength.toLocaleString()} Chars`;
         }
     </script>
 </body>
