@@ -83,6 +83,14 @@
         <div class="row">
             <label>Voice Model:</label>
             <select id="ttsVoice">
+                <optgroup label="Chirp 3: HD (Next-Gen AI - Highly Natural & Emotional)">
+                    <option value="en-US-Chirp3-HD-Charon">en-US-Chirp3-HD-Charon (Male - Informative)</option>
+                    <option value="en-US-Chirp3-HD-Puck">en-US-Chirp3-HD-Puck (Male - Upbeat)</option>
+                    <option value="en-US-Chirp3-HD-Fenrir">en-US-Chirp3-HD-Fenrir (Male - Excitable)</option>
+                    <option value="en-US-Chirp3-HD-Aoede">en-US-Chirp3-HD-Aoede (Female - Breezy)</option>
+                    <option value="en-US-Chirp3-HD-Zephyr">en-US-Chirp3-HD-Zephyr (Female - Bright)</option>
+                    <option value="en-US-Chirp3-HD-Kore">en-US-Chirp3-HD-Kore (Female - Firm)</option>
+                </optgroup>
                 <optgroup label="Neural2 (Recommended - High Quality & Pitch Adjustable)">
                     <option value="en-US-Neural2-J" selected>en-US-Neural2-J (Male - Deep/Authoritative)</option>
                     <option value="en-US-Neural2-I">en-US-Neural2-I (Male - Smooth/Calm)</option>
@@ -345,8 +353,8 @@
             if (voiceName.includes('Journey')) {
                 // Journey Mode: Plain text only, no prosody allowed
                 payload.input = { text: cleanText };
-            } else if (voiceName.includes('Studio')) {
-                // 🚨 Studio Mode: Rate is allowed, but Pitch is STRICTLY FORBIDDEN!
+            } else if (voiceName.includes('Studio') || voiceName.includes('Chirp3')) {
+                // 🚨 Studio & Chirp 3 HD Mode: Rate (Speed) is fully supported for natural pacing. Pitch is restricted.
                 let wrappedSSML = `<speak>\n<prosody rate="${rateStr}">\n${cleanText}\n</prosody>\n</speak>`;
                 payload.input = { ssml: wrappedSSML };
             } else {
@@ -471,7 +479,7 @@
             dBtn.onclick = () => {
                 const a = document.createElement("a");
                 a.href = audioUrl;
-                a.download = `Dhamma_Audio_${new Date().getTime()}.${mimeType === 'audio/mpeg' ? 'mp3' : 'wav'}`;
+                a.download = `Audio_Export_${new Date().getTime()}.${mimeType === 'audio/mpeg' ? 'mp3' : 'wav'}`;
                 a.click();
             };
             dBtn.disabled = false;
