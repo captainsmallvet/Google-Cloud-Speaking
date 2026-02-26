@@ -83,12 +83,6 @@
         <div class="row">
             <label>Voice Model:</label>
             <select id="ttsVoice">
-                <optgroup label="Chirp 3 HD (Best Realism & Natural Pacing)">
-                    <option value="en-US-Chirp3-HD-Charon">en-US-Chirp3-HD-Charon (Male - Deep)</option>
-                    <option value="en-US-Chirp3-HD-Puck">en-US-Chirp3-HD-Puck (Male - Soft)</option>
-                    <option value="en-US-Chirp3-HD-Aoede">en-US-Chirp3-HD-Aoede (Female - Warm)</option>
-                    <option value="en-US-Chirp3-HD-Zephyr">en-US-Chirp3-HD-Zephyr (Female - Clear)</option>
-                </optgroup>
                 <optgroup label="Neural2 (Recommended - High Quality & Pitch Adjustable)">
                     <option value="en-US-Neural2-J" selected>en-US-Neural2-J (Male - Deep/Authoritative)</option>
                     <option value="en-US-Neural2-I">en-US-Neural2-I (Male - Smooth/Calm)</option>
@@ -348,15 +342,17 @@
             // Remove any accidental HTML/XML tags from the raw text to be safe
             let cleanText = rawTextChunk.replace(/<[^>]+>/g, '').trim();
 
-            if (voiceName.includes('Chirp3') || voiceName.includes('Journey')) {
-                // Chirp 3 HD & Journey: Best with text input + API config
+            if (voiceName.includes('Journey')) {
+                // Journey Mode: Plain text only, no prosody allowed
                 payload.input = { text: cleanText };
             } else if (voiceName.includes('Studio')) {
-                // Studio: SSML prosody rate ONLY
-                payload.input = { ssml: `<speak><prosody rate="${rateVal*100}%">${cleanText}</prosody></speak>` };
+                // 🚨 Studio Mode: Rate is allowed, but Pitch is STRICTLY FORBIDDEN!
+                let wrappedSSML = `<speak>\n<prosody rate="${rateStr}">\n${cleanText}\n</prosody>\n</speak>`;
+                payload.input = { ssml: wrappedSSML };
             } else {
-                // Neural2: SSML prosody rate & pitch
-                payload.input = { ssml: `<speak><prosody rate="${rateVal*100}%" pitch="${(pitchVal >= 0 ? '+' : '') + pitchVal}%">${cleanText}</prosody></speak>` };
+                // ✅ Neural2 Mode: Supports both rate and pitch perfectly
+                let wrappedSSML = `<speak>\n<prosody rate="${rateStr}" pitch="${pitchStr}">\n${cleanText}\n</prosody>\n</speak>`;
+                payload.input = { ssml: wrappedSSML };
             }
 
             const response = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${key}`, {
