@@ -63,7 +63,7 @@
 
     <div class="section">
         <h3 style="color: #fff;">📝 Final Audio Script (Auto-SSML)</h3>
-        <p style="color: #888; margin-top: 0; font-size: 14px;">Paste your English text here. The system will automatically wrap it in SSML tags before generating audio.</p>
+        <p style="color: #888; margin-top: 0; font-size: 14px;">Paste your English or Thai text here. The system will automatically wrap it in SSML tags before generating audio.</p>
         <div class="row">
             <input type="file" id="fileScript" accept=".txt" onchange="openFile(event, 'audioScript')">
             <button onclick="document.getElementById('fileScript').click()">Open (.txt)</button>
@@ -83,34 +83,38 @@
         <div class="row">
             <label>Voice Model:</label>
             <select id="ttsVoice">
+                <optgroup label="Polyglot (Preview) - Multi-Language Voice">
+                    <option value="en-US-Polyglot-1" data-lang="en-US">en-US-Polyglot-1 (Speaking English US)</option>
+                    <option value="en-US-Polyglot-1" data-lang="th-TH">en-US-Polyglot-1 (Speaking Thai)</option>
+                </optgroup>
                 <optgroup label="Chirp 3: HD (Next-Gen AI - Highly Natural & Emotional)">
-                    <option value="en-US-Chirp3-HD-Enceladus">en-US-Chirp3-HD-Enceladus (Male - Energetic/Promo)</option>
-                    <option value="en-US-Chirp3-HD-Iapetus">en-US-Chirp3-HD-Iapetus (Male - Friendly/Casual)</option>
-                    <option value="en-US-Chirp3-HD-Charon">en-US-Chirp3-HD-Charon (Male - Informative)</option>
-                    <option value="en-US-Chirp3-HD-Puck">en-US-Chirp3-HD-Puck (Male - Upbeat)</option>
-                    <option value="en-US-Chirp3-HD-Fenrir">en-US-Chirp3-HD-Fenrir (Male - Excitable)</option>
-                    <option value="en-US-Chirp3-HD-Aoede">en-US-Chirp3-HD-Aoede (Female - Breezy)</option>
-                    <option value="en-US-Chirp3-HD-Zephyr">en-US-Chirp3-HD-Zephyr (Female - Bright)</option>
-                    <option value="en-US-Chirp3-HD-Kore">en-US-Chirp3-HD-Kore (Female - Firm)</option>
+                    <option value="en-US-Chirp3-HD-Enceladus" data-lang="en-US">en-US-Chirp3-HD-Enceladus (Male - Energetic/Promo)</option>
+                    <option value="en-US-Chirp3-HD-Iapetus" data-lang="en-US">en-US-Chirp3-HD-Iapetus (Male - Friendly/Casual)</option>
+                    <option value="en-US-Chirp3-HD-Charon" data-lang="en-US">en-US-Chirp3-HD-Charon (Male - Informative)</option>
+                    <option value="en-US-Chirp3-HD-Puck" data-lang="en-US">en-US-Chirp3-HD-Puck (Male - Upbeat)</option>
+                    <option value="en-US-Chirp3-HD-Fenrir" data-lang="en-US">en-US-Chirp3-HD-Fenrir (Male - Excitable)</option>
+                    <option value="en-US-Chirp3-HD-Aoede" data-lang="en-US">en-US-Chirp3-HD-Aoede (Female - Breezy)</option>
+                    <option value="en-US-Chirp3-HD-Zephyr" data-lang="en-US">en-US-Chirp3-HD-Zephyr (Female - Bright)</option>
+                    <option value="en-US-Chirp3-HD-Kore" data-lang="en-US">en-US-Chirp3-HD-Kore (Female - Firm)</option>
                 </optgroup>
                 <optgroup label="Neural2 (Recommended - High Quality & Pitch Adjustable)">
-                    <option value="en-US-Neural2-J" selected>en-US-Neural2-J (Male - Deep/Authoritative)</option>
-                    <option value="en-US-Neural2-I">en-US-Neural2-I (Male - Smooth/Calm)</option>
-                    <option value="en-US-Neural2-D">en-US-Neural2-D (Male - Mature)</option>
-                    <option value="en-US-Neural2-A">en-US-Neural2-A (Male - Standard)</option>
-                    <option value="en-US-Neural2-C">en-US-Neural2-C (Female - Soft)</option>
-                    <option value="en-US-Neural2-E">en-US-Neural2-E (Female - Articulate)</option>
-                    <option value="en-US-Neural2-F">en-US-Neural2-F (Female - Bright)</option>
-                    <option value="en-US-Neural2-G">en-US-Neural2-G (Female - Gentle)</option>
-                    <option value="en-US-Neural2-H">en-US-Neural2-H (Female - Warm)</option>
+                    <option value="en-US-Neural2-J" data-lang="en-US" selected>en-US-Neural2-J (Male - Deep/Authoritative)</option>
+                    <option value="en-US-Neural2-I" data-lang="en-US">en-US-Neural2-I (Male - Smooth/Calm)</option>
+                    <option value="en-US-Neural2-D" data-lang="en-US">en-US-Neural2-D (Male - Mature)</option>
+                    <option value="en-US-Neural2-A" data-lang="en-US">en-US-Neural2-A (Male - Standard)</option>
+                    <option value="en-US-Neural2-C" data-lang="en-US">en-US-Neural2-C (Female - Soft)</option>
+                    <option value="en-US-Neural2-E" data-lang="en-US">en-US-Neural2-E (Female - Articulate)</option>
+                    <option value="en-US-Neural2-F" data-lang="en-US">en-US-Neural2-F (Female - Bright)</option>
+                    <option value="en-US-Neural2-G" data-lang="en-US">en-US-Neural2-G (Female - Gentle)</option>
+                    <option value="en-US-Neural2-H" data-lang="en-US">en-US-Neural2-H (Female - Warm)</option>
                 </optgroup>
                 <optgroup label="Studio (High Quality - Fixed Pitch)">
-                    <option value="en-US-Studio-Q">en-US-Studio-Q (Male - Studio Broadcast)</option>
-                    <option value="en-US-Studio-O">en-US-Studio-O (Female - Studio Broadcast)</option>
+                    <option value="en-US-Studio-Q" data-lang="en-US">en-US-Studio-Q (Male - Studio Broadcast)</option>
+                    <option value="en-US-Studio-O" data-lang="en-US">en-US-Studio-O (Female - Studio Broadcast)</option>
                 </optgroup>
                 <optgroup label="Journey (Natural AI - No Prosody Allowed)">
-                    <option value="en-US-Journey-D">en-US-Journey-D (Male - Natural)</option>
-                    <option value="en-US-Journey-F">en-US-Journey-F (Female - Natural)</option>
+                    <option value="en-US-Journey-D" data-lang="en-US">en-US-Journey-D (Male - Natural)</option>
+                    <option value="en-US-Journey-F" data-lang="en-US">en-US-Journey-F (Female - Natural)</option>
                 </optgroup>
             </select>
             <label>Format:</label>
@@ -331,7 +335,12 @@
 
         // --- 🚀 THE AUTO-SSML WRAPPER & FETCH FUNCTION 🚀 ---
         async function fetchTTS(rawTextChunk) {
-            const voiceName = document.getElementById('ttsVoice').value;
+            const voiceSelect = document.getElementById('ttsVoice');
+            const voiceName = voiceSelect.value;
+            
+            // 🌟 NEW: Extract Language Code Dynamically based on the selected option!
+            const langCode = voiceSelect.options[voiceSelect.selectedIndex].getAttribute('data-lang') || voiceName.substring(0, 5);
+
             const key = document.getElementById('cloudKey').value.trim();
             const format = document.getElementById('audioFormat').value;
             
@@ -342,7 +351,7 @@
             const volumeDb = parseFloat(document.getElementById('ttsVolume').value);
 
             let payload = {
-                voice: { languageCode: "en-US", name: voiceName },
+                voice: { languageCode: langCode, name: voiceName },
                 audioConfig: { 
                     audioEncoding: format,
                     volumeGainDb: volumeDb 
@@ -360,7 +369,7 @@
                 let wrappedSSML = `<speak>\n<prosody rate="${rateStr}">\n${cleanText}\n</prosody>\n</speak>`;
                 payload.input = { ssml: wrappedSSML };
             } else {
-                // ✅ Neural2 Mode: Supports both rate and pitch perfectly
+                // ✅ Neural2 & Polyglot Mode: Supports both rate and pitch perfectly
                 let wrappedSSML = `<speak>\n<prosody rate="${rateStr}" pitch="${pitchStr}">\n${cleanText}\n</prosody>\n</speak>`;
                 payload.input = { ssml: wrappedSSML };
             }
