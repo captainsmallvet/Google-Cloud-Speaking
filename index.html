@@ -439,25 +439,39 @@
             audioChunksBlob = []; 
             document.getElementById('downloadBtn').disabled = true;
 
+            const maxRetries = 3; // จำนวนครั้งที่จะลองใหม่
+
             for(let i = 0; i < chunks.length; i++) {
                 if(!isProcessing) break; 
 
                 logStatus(`Processing Batch ${i+1}/${chunks.length}...`);
                 
-                try {
-                    const audioBase64 = await fetchTTS(chunks[i]);
-                    audioChunksBlob.push(base64ToUint8Array(audioBase64));
-                    
-                    if(i < chunks.length - 1 && isProcessing) {
-                        const jitter = Math.random() * 2000;
-                        const waitTime = baseDelay + jitter;
-                        logStatus(`Waiting ${(waitTime/1000).toFixed(1)}s before next batch...`);
-                        await delay(waitTime);
+                let success = false;
+                let retryCount = 0;
+
+                while (!success && retryCount <= maxRetries && isProcessing) {
+                    try {
+                        const audioBase64 = await fetchTTS(chunks[i]);
+                        audioChunksBlob.push(base64ToUint8Array(audioBase64));
+                        success = true;
+                        
+                        if(i < chunks.length - 1 && isProcessing) {
+                            const jitter = Math.random() * 2000;
+                            const waitTime = baseDelay + jitter;
+                            logStatus(`Waiting ${(waitTime/1000).toFixed(1)}s before next batch...`);
+                            await delay(waitTime);
+                        }
+                    } catch(e) {
+                        retryCount++;
+                        if (retryCount <= maxRetries && isProcessing) {
+                            logStatus(`⚠️ Error on batch ${i+1}: ${e.message}. Retrying (${retryCount}/${maxRetries}) in 5 seconds...`);
+                            await delay(5000); // รอ 5 วินาทีก่อนลองใหม่
+                        } else {
+                            logStatus(`❌ Critical Error on batch ${i+1} after ${maxRetries} retries: ${e.message}`);
+                            isProcessing = false;
+                            break;
+                        }
                     }
-                } catch(e) {
-                    logStatus(`Error on batch ${i+1}: ${e.message}`);
-                    isProcessing = false;
-                    break;
                 }
             }
 
