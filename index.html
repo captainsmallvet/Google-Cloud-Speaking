@@ -338,8 +338,11 @@
             const voiceSelect = document.getElementById('ttsVoice');
             const voiceName = voiceSelect.value;
             
-            // 🌟 NEW: Extract Language Code Dynamically based on the selected option!
-            const langCode = voiceSelect.options[voiceSelect.selectedIndex].getAttribute('data-lang') || voiceName.substring(0, 5);
+            // 🌟 แก้ไข: บังคับให้ languageCode ตรงกับชื่อโมเดลเสมอ (en-US) เพื่อป้องกันเซิร์ฟเวอร์ปฏิเสธคำสั่ง
+            const baseLangCode = voiceName.substring(0, 5); 
+            
+            // เก็บเป้าหมายภาษาไว้ เพื่อใช้ครอบแท็ก <lang> ใน SSML แทน
+            const targetLang = voiceSelect.options[voiceSelect.selectedIndex].getAttribute('data-lang');
 
             const key = document.getElementById('cloudKey').value.trim();
             const format = document.getElementById('audioFormat').value;
@@ -351,7 +354,8 @@
             const volumeDb = parseFloat(document.getElementById('ttsVolume').value);
 
             let payload = {
-                voice: { languageCode: langCode, name: voiceName },
+                // ใช้ baseLangCode (en-US) ส่งให้ระบบ
+                voice: { languageCode: baseLangCode, name: voiceName }, 
                 audioConfig: { 
                     audioEncoding: format,
                     volumeGainDb: volumeDb 
@@ -361,16 +365,22 @@
             // Remove any accidental HTML/XML tags from the raw text to be safe
             let cleanText = rawTextChunk.replace(/<[^>]+>/g, '').trim();
 
+            // 🌟 สำคัญ: ถ้าเลือกพูดภาษาไทย (th-TH) ให้ห่อข้อความด้วย <lang> AI จะได้อ่านออกเสียงเป็นภาษาไทยชัดเจน
+            let innerText = cleanText;
+            if (targetLang === 'th-TH' && voiceName.includes('Polyglot')) {
+                innerText = `<lang xml:lang="th-TH">\n${cleanText}\n</lang>`;
+            }
+
             if (voiceName.includes('Journey')) {
                 // Journey Mode: Plain text only, no prosody allowed
                 payload.input = { text: cleanText };
             } else if (voiceName.includes('Studio') || voiceName.includes('Chirp3')) {
                 // 🚨 Studio & Chirp 3 HD Mode: Rate (Speed) is fully supported for natural pacing. Pitch is restricted.
-                let wrappedSSML = `<speak>\n<prosody rate="${rateStr}">\n${cleanText}\n</prosody>\n</speak>`;
+                let wrappedSSML = `<speak>\n<prosody rate="${rateStr}">\n${innerText}\n</prosody>\n</speak>`;
                 payload.input = { ssml: wrappedSSML };
             } else {
                 // ✅ Neural2 & Polyglot Mode: Supports both rate and pitch perfectly
-                let wrappedSSML = `<speak>\n<prosody rate="${rateStr}" pitch="${pitchStr}">\n${cleanText}\n</prosody>\n</speak>`;
+                let wrappedSSML = `<speak>\n<prosody rate="${rateStr}" pitch="${pitchStr}">\n${innerText}\n</prosody>\n</speak>`;
                 payload.input = { ssml: wrappedSSML };
             }
 
