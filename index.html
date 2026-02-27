@@ -83,12 +83,9 @@
         <div class="row">
             <label>Voice Model:</label>
             <select id="ttsVoice">
-                <optgroup label="Polyglot (Preview) - Multi-Language Voice Speed & Pitch Adjustable">
-                    <option value="en-US-Polyglot-1" data-lang="en-US">en-US-Polyglot-1</option>
-                </optgroup>
                 <optgroup label="Chirp 3: HD (Next-Gen AI - Highly Natural & Emotional)">
                     <option value="en-US-Chirp3-HD-Enceladus" data-lang="en-US">en-US-Chirp3-HD-Enceladus (Male - Energetic/Promo)</option>
-                    <option value="en-US-Chirp3-HD-Iapetus" data-lang="en-US">en-US-Chirp3-HD-Iapetus (Male - Friendly/Casual)</option>
+                    <option value="en-US-Chirp3-HD-Iapetus" data-lang="en-US" selected>en-US-Chirp3-HD-Iapetus (Male - Friendly/Casual)</option>
                     <option value="en-US-Chirp3-HD-Charon" data-lang="en-US">en-US-Chirp3-HD-Charon (Male - Informative)</option>
                     <option value="en-US-Chirp3-HD-Puck" data-lang="en-US">en-US-Chirp3-HD-Puck (Male - Upbeat)</option>
                     <option value="en-US-Chirp3-HD-Fenrir" data-lang="en-US">en-US-Chirp3-HD-Fenrir (Male - Excitable)</option>
@@ -97,7 +94,7 @@
                     <option value="en-US-Chirp3-HD-Kore" data-lang="en-US">en-US-Chirp3-HD-Kore (Female - Firm)</option>
                 </optgroup>
                 <optgroup label="Neural2 (Recommended - High Quality & Pitch Adjustable)">
-                    <option value="en-US-Neural2-J" data-lang="en-US" selected>en-US-Neural2-J (Male - Deep/Authoritative)</option>
+                    <option value="en-US-Neural2-J" data-lang="en-US">en-US-Neural2-J (Male - Deep/Authoritative)</option>
                     <option value="en-US-Neural2-I" data-lang="en-US">en-US-Neural2-I (Male - Smooth/Calm)</option>
                     <option value="en-US-Neural2-D" data-lang="en-US">en-US-Neural2-D (Male - Mature)</option>
                     <option value="en-US-Neural2-A" data-lang="en-US">en-US-Neural2-A (Male - Standard)</option>
@@ -115,6 +112,9 @@
                     <option value="en-US-Journey-D" data-lang="en-US">en-US-Journey-D (Male - Natural)</option>
                     <option value="en-US-Journey-F" data-lang="en-US">en-US-Journey-F (Female - Natural)</option>
                 </optgroup>
+                <optgroup label="Polyglot (Preview) - Multi-Language Voice Speed & Pitch Adjustable">
+                    <option value="en-US-Polyglot-1" data-lang="en-US">en-US-Polyglot-1</option>
+                </optgroup>
             </select>
             <label>Format:</label>
             <select id="audioFormat">
@@ -126,13 +126,13 @@
 
         <div class="row">
             <label>Prosody Rate:</label>
-            <input type="range" id="ttsRate" min="25" max="400" value="80" oninput="updateSlider('ttsRate', 'rateVal', '%')">
-            <span class="val-display" id="rateVal">80%</span>
+            <input type="range" id="ttsRate" min="25" max="400" value="90" oninput="updateSlider('ttsRate', 'rateVal', '%')">
+            <span class="val-display" id="rateVal">90%</span>
         </div>
         <div class="row">
             <label>Prosody Pitch:</label>
-            <input type="range" id="ttsPitch" min="-20" max="20" value="5" oninput="updateSlider('ttsPitch', 'pitchVal', '%')">
-            <span class="val-display" id="pitchVal">5%</span>
+            <input type="range" id="ttsPitch" min="-20" max="20" value="0" oninput="updateSlider('ttsPitch', 'pitchVal', '%')">
+            <span class="val-display" id="pitchVal">0%</span>
         </div>
         <div class="row">
             <label>Volume Gain:</label>
