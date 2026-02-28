@@ -59,6 +59,15 @@
             <input type="text" id="geminiKey" placeholder="Optional (Only needed if using AI Text Refiner)">
             <button onclick="saveKey('geminiKey')">Save</button>
         </div>
+        
+        <div class="row" style="margin-top: 15px; padding: 15px; background: #2a2a2a; border-radius: 4px; border: 1px solid #555; display: block;">
+            <div style="color: #81c995; font-weight: bold; margin-bottom: 10px; font-size: 16px;">
+                📊 This Month's Usage (Auto-Resets Monthly)
+            </div>
+            <div id="usageDetails" style="font-family: monospace; font-size: 15px; color: #ffffff; line-height: 1.8;">
+                Loading data from Google Sheets...
+            </div>
+        </div>
     </div>
 
     <div class="section">
@@ -190,6 +199,9 @@
     </div>
 
     <script>
+        // 🚨 สำคัญ: ใส่ลิงก์ URL ที่ได้จาก Google Apps Script (Web App) ของคุณตรงนี้ครับ 🚨
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJc5EY-Co-mVrdXD9mMzyNen6FaIe0ZjTyn5JTuMdh8gf2wPt8td3RqMEkIhF6a4HjPA/exec"; 
+
         let isProcessing = false;
         let audioChunksBlob = []; 
 
@@ -214,6 +226,7 @@
             loadKey('cloudKey');
             updateCharCount('audioScript', 'countScript');
             loadPreset(); 
+            fetchTotalUsage(); // ดึงยอดล่าสุดทันทีที่เปิดเว็บ
         };
 
         document.getElementById('audioScript').addEventListener('input', () => updateCharCount('audioScript', 'countScript'));
@@ -270,6 +283,79 @@
             const a = document.createElement("a");
             a.href = url; a.download = filename; a.click();
             URL.revokeObjectURL(url);
+        }
+
+        // --- 📊 ดึงยอดรวมรายเดือนมาแสดง 📊 ---
+        async function fetchTotalUsage() {
+            if (!APPS_SCRIPT_URL.startsWith("https://")) return;
+            try {
+                const response = await fetch(APPS_SCRIPT_URL);
+                const data = await response.json();
+                
+                if (data.totals) {
+                    let htmlContent = "";
+                    const t = data.totals;
+                    
+                    if (t.Neural2 > 0) htmlContent += `Neural2: <span style="color:#8ab4f8">${t.Neural2.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
+                    if (t.Chirp3 > 0) htmlContent += `Chirp 3: <span style="color:#8ab4f8">${t.Chirp3.toLocaleString()}</span><br>`;
+                    if (t.Studio > 0) htmlContent += `Studio: <span style="color:#8ab4f8">${t.Studio.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
+                    if (t.Journey > 0) htmlContent += `Journey: <span style="color:#8ab4f8">${t.Journey.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
+                    if (t.Polyglot > 0) htmlContent += `Polyglot: <span style="color:#8ab4f8">${t.Polyglot.toLocaleString()}</span><br>`;
+                    if (t.Standard > 0) htmlContent += `Standard: <span style="color:#8ab4f8">${t.Standard.toLocaleString()}</span> / 4,000,000 (Free)<br>`;
+                    
+                    if (htmlContent === "") {
+                        htmlContent = '<span style="color:#888;">No usage recorded for this month yet.</span>';
+                    }
+                    document.getElementById('usageDetails').innerHTML = htmlContent;
+                }
+            } catch (error) {
+                console.error("Failed to fetch total usage:", error);
+                document.getElementById('usageDetails').innerHTML = '<span style="color:#f28b82;">Offline or Connection Error</span>';
+            }
+        }
+
+        // --- 📊 บันทึกยอดการใช้งานอัตโนมัติ 📊 ---
+        async function recordUsageToSheets(voiceType, textToConvert) {
+            if (!APPS_SCRIPT_URL.startsWith("https://")) return;
+
+            const charCount = textToConvert.length;
+            const userAgent = navigator.userAgent;
+
+            let location = "Unknown";
+            try {
+                const res = await fetch('https://ipapi.co/json/');
+                const locData = await res.json();
+                location = `${locData.city}, ${locData.country_name}`;
+            } catch (e) { console.log("Location detection failed"); }
+
+            let browser = "Other";
+            if (userAgent.includes("Chrome")) browser = "Chrome";
+            else if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) browser = "Safari";
+            else if (userAgent.includes("Firefox")) browser = "Firefox";
+            else if (userAgent.includes("Edge")) browser = "Edge";
+
+            let device = "PC / Other";
+            if (userAgent.includes("Android")) device = "Android Device";
+            if (userAgent.includes("iPad") || userAgent.includes("iPhone")) device = "iOS Device";
+            if (userAgent.includes("Huawei") || userAgent.includes("HarmonyOS")) device = "Huawei Device";
+
+            try {
+                await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        voiceType: voiceType,
+                        charCount: charCount,
+                        device: device,
+                        browser: browser,
+                        location: location
+                    })
+                });
+                console.log('Usage tracked successfully.');
+            } catch (error) {
+                console.error('Error logging usage:', error);
+            }
         }
 
         async function refineText() {
@@ -336,49 +422,35 @@
         async function fetchTTS(rawTextChunk) {
             const voiceSelect = document.getElementById('ttsVoice');
             const voiceName = voiceSelect.value;
-            
-            // 🌟 แก้ไข: บังคับให้ languageCode ตรงกับชื่อโมเดลเสมอ (en-US) เพื่อป้องกันเซิร์ฟเวอร์ปฏิเสธคำสั่ง
             const baseLangCode = voiceName.substring(0, 5); 
-            
-            // เก็บเป้าหมายภาษาไว้ เพื่อใช้ครอบแท็ก <lang> ใน SSML แทน
             const targetLang = voiceSelect.options[voiceSelect.selectedIndex].getAttribute('data-lang');
 
             const key = document.getElementById('cloudKey').value.trim();
             const format = document.getElementById('audioFormat').value;
             
-            // Get Slider Values
             const rateStr = document.getElementById('ttsRate').value + "%";
             let pitchValue = document.getElementById('ttsPitch').value;
             const pitchStr = (pitchValue > 0 ? "+" + pitchValue : pitchValue) + "%";
             const volumeDb = parseFloat(document.getElementById('ttsVolume').value);
 
             let payload = {
-                // ใช้ baseLangCode (en-US) ส่งให้ระบบ
                 voice: { languageCode: baseLangCode, name: voiceName }, 
-                audioConfig: { 
-                    audioEncoding: format,
-                    volumeGainDb: volumeDb 
-                }
+                audioConfig: { audioEncoding: format, volumeGainDb: volumeDb }
             };
 
-            // Remove any accidental HTML/XML tags from the raw text to be safe
             let cleanText = rawTextChunk.replace(/<[^>]+>/g, '').trim();
-
-            // 🌟 สำคัญ: ถ้าเลือกพูดภาษาไทย (th-TH) ให้ห่อข้อความด้วย <lang> AI จะได้อ่านออกเสียงเป็นภาษาไทยชัดเจน
             let innerText = cleanText;
+            
             if (targetLang === 'th-TH' && voiceName.includes('Polyglot')) {
                 innerText = `<lang xml:lang="th-TH">\n${cleanText}\n</lang>`;
             }
 
             if (voiceName.includes('Journey')) {
-                // Journey Mode: Plain text only, no prosody allowed
                 payload.input = { text: cleanText };
             } else if (voiceName.includes('Studio') || voiceName.includes('Chirp3')) {
-                // 🚨 Studio & Chirp 3 HD Mode: Rate (Speed) is fully supported for natural pacing. Pitch is restricted.
                 let wrappedSSML = `<speak>\n<prosody rate="${rateStr}">\n${innerText}\n</prosody>\n</speak>`;
                 payload.input = { ssml: wrappedSSML };
             } else {
-                // ✅ Neural2 & Polyglot Mode: Supports both rate and pitch perfectly
                 let wrappedSSML = `<speak>\n<prosody rate="${rateStr}" pitch="${pitchStr}">\n${innerText}\n</prosody>\n</speak>`;
                 payload.input = { ssml: wrappedSSML };
             }
@@ -401,17 +473,13 @@
             for(let seg of segments) {
                 if(!seg.trim()) continue;
                 if((currentChunk.length + seg.length) > maxChars) {
-                    if(currentChunk.trim()) {
-                        chunks.push(currentChunk.trim());
-                    }
+                    if(currentChunk.trim()) { chunks.push(currentChunk.trim()); }
                     currentChunk = seg + " ";
                 } else {
                     currentChunk += seg + " ";
                 }
             }
-            if(currentChunk.trim()) {
-                chunks.push(currentChunk.trim());
-            }
+            if(currentChunk.trim()) { chunks.push(currentChunk.trim()); }
             return chunks;
         }
 
@@ -426,6 +494,9 @@
                 let segments = text.split(/(?<=\.|\?|\!|\n)\s+/);
                 let previewText = segments.slice(0, 5).join(' ').trim();
                 
+                // 📊 บันทึกยอด และอัปเดตการแสดงผล
+                recordUsageToSheets(document.getElementById('ttsVoice').value, previewText).then(() => fetchTotalUsage());
+
                 const audioBase64 = await fetchTTS(previewText);
                 const format = document.getElementById('audioFormat').value === 'MP3' ? 'audio/mpeg' : 'audio/wav';
                 const audioBlob = new Blob([base64ToUint8Array(audioBase64)], { type: format });
@@ -450,6 +521,9 @@
             const baseDelay = parseFloat(document.getElementById('batchDelay').value) * 1000;
             const format = document.getElementById('audioFormat').value === 'MP3' ? 'audio/mpeg' : 'audio/wav';
 
+            // 📊 บันทึกยอด และอัปเดตการแสดงผล
+            recordUsageToSheets(document.getElementById('ttsVoice').value, text).then(() => fetchTotalUsage());
+
             const chunks = chunkText(text, batchSize);
             logStatus(`Starting generation. Total batches: ${chunks.length}`);
             
@@ -457,7 +531,7 @@
             audioChunksBlob = []; 
             document.getElementById('downloadBtn').disabled = true;
 
-            const maxRetries = 3; // จำนวนครั้งที่จะลองใหม่
+            const maxRetries = 3; 
 
             for(let i = 0; i < chunks.length; i++) {
                 if(!isProcessing) break; 
@@ -483,7 +557,7 @@
                         retryCount++;
                         if (retryCount <= maxRetries && isProcessing) {
                             logStatus(`⚠️ Error on batch ${i+1}: ${e.message}. Retrying (${retryCount}/${maxRetries}) in 5 seconds...`);
-                            await delay(5000); // รอ 5 วินาทีก่อนลองใหม่
+                            await delay(5000); 
                         } else {
                             logStatus(`❌ Critical Error on batch ${i+1} after ${maxRetries} retries: ${e.message}`);
                             isProcessing = false;
