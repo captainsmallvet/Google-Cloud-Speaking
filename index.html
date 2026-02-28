@@ -61,7 +61,7 @@
         </div>
         
         <div class="row" style="margin-top: 15px; padding: 15px; background: #2a2a2a; border-radius: 4px; border: 1px solid #555; display: block;">
-            <div style="color: #81c995; font-weight: bold; margin-bottom: 10px; font-size: 16px;">
+            <div style="color: #8ab4f8; font-weight: bold; margin-bottom: 10px; font-size: 16px;">
                 📊 This Month's Usage (Auto-Resets Monthly)
             </div>
             <div id="usageDetails" style="font-family: monospace; font-size: 15px; color: #ffffff; line-height: 1.8;">
@@ -285,7 +285,16 @@
             URL.revokeObjectURL(url);
         }
 
-        // --- 📊 ดึงยอดรวมรายเดือนมาแสดง 📊 ---
+        // --- 📊 ดึงยอดรวมรายเดือนมาแสดง พร้อมกำหนดสีแจ้งเตือน 📊 ---
+        
+        // ฟังก์ชันช่วยกำหนดสีตามการใช้งาน
+        function getUsageColor(usage, maxLimit) {
+            const percent = usage / maxLimit;
+            if (percent > 0.9) return "#f28b82"; // แดง (> 90%)
+            if (percent > 0.7) return "#fbbc04"; // เหลือง (> 70%)
+            return "#81c995"; // เขียว (0 - 70%)
+        }
+
         async function fetchTotalUsage() {
             if (!APPS_SCRIPT_URL.startsWith("https://")) return;
             try {
@@ -296,12 +305,12 @@
                     let htmlContent = "";
                     const t = data.totals;
                     
-                    if (t.Neural2 > 0) htmlContent += `Neural2: <span style="color:#8ab4f8">${t.Neural2.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
-                    if (t.Chirp3 > 0) htmlContent += `Chirp 3: <span style="color:#8ab4f8">${t.Chirp3.toLocaleString()}</span><br>`;
-                    if (t.Studio > 0) htmlContent += `Studio: <span style="color:#8ab4f8">${t.Studio.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
-                    if (t.Journey > 0) htmlContent += `Journey: <span style="color:#8ab4f8">${t.Journey.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
-                    if (t.Polyglot > 0) htmlContent += `Polyglot: <span style="color:#8ab4f8">${t.Polyglot.toLocaleString()}</span><br>`;
-                    if (t.Standard > 0) htmlContent += `Standard: <span style="color:#8ab4f8">${t.Standard.toLocaleString()}</span> / 4,000,000 (Free)<br>`;
+                    if (t.Neural2 > 0) htmlContent += `Neural2: <span style="color:${getUsageColor(t.Neural2, 1000000)}">${t.Neural2.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
+                    if (t.Chirp3 > 0) htmlContent += `Chirp 3: <span style="color:${getUsageColor(t.Chirp3, 1000000)}">${t.Chirp3.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
+                    if (t.Studio > 0) htmlContent += `Studio: <span style="color:${getUsageColor(t.Studio, 1000000)}">${t.Studio.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
+                    if (t.Journey > 0) htmlContent += `Journey: <span style="color:${getUsageColor(t.Journey, 1000000)}">${t.Journey.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
+                    if (t.Polyglot > 0) htmlContent += `Polyglot: <span style="color:${getUsageColor(t.Polyglot, 1000000)}">${t.Polyglot.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
+                    if (t.Standard > 0) htmlContent += `Standard: <span style="color:${getUsageColor(t.Standard, 4000000)}">${t.Standard.toLocaleString()}</span> / 4,000,000 (Free)<br>`;
                     
                     if (htmlContent === "") {
                         htmlContent = '<span style="color:#888;">No usage recorded for this month yet.</span>';
