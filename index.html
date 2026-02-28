@@ -285,9 +285,7 @@
             URL.revokeObjectURL(url);
         }
 
-        // --- 📊 ดึงยอดรวมรายเดือนมาแสดง พร้อมกำหนดสีแจ้งเตือน 📊 ---
-        
-        // ฟังก์ชันช่วยกำหนดสีตามการใช้งาน
+        // --- 📊 ดึงยอดรวมรายเดือนมาแสดง (แบบ Dynamic เผื่ออนาคต) 📊 ---
         function getUsageColor(usage, maxLimit) {
             const percent = usage / maxLimit;
             if (percent > 0.9) return "#f28b82"; // แดง (> 90%)
@@ -301,21 +299,29 @@
                 const response = await fetch(APPS_SCRIPT_URL);
                 const data = await response.json();
                 
-                if (data.totals) {
+                if (data.totals && Object.keys(data.totals).length > 0) {
                     let htmlContent = "";
-                    const t = data.totals;
                     
-                    if (t.Neural2 > 0) htmlContent += `Neural2: <span style="color:${getUsageColor(t.Neural2, 1000000)}">${t.Neural2.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
-                    if (t.Chirp3 > 0) htmlContent += `Chirp 3: <span style="color:${getUsageColor(t.Chirp3, 1000000)}">${t.Chirp3.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
-                    if (t.Studio > 0) htmlContent += `Studio: <span style="color:${getUsageColor(t.Studio, 1000000)}">${t.Studio.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
-                    if (t.Journey > 0) htmlContent += `Journey: <span style="color:${getUsageColor(t.Journey, 1000000)}">${t.Journey.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
-                    if (t.Polyglot > 0) htmlContent += `Polyglot: <span style="color:${getUsageColor(t.Polyglot, 1000000)}">${t.Polyglot.toLocaleString()}</span> / 1,000,000 (Free)<br>`;
-                    if (t.Standard > 0) htmlContent += `Standard: <span style="color:${getUsageColor(t.Standard, 4000000)}">${t.Standard.toLocaleString()}</span> / 4,000,000 (Free)<br>`;
-                    
-                    if (htmlContent === "") {
-                        htmlContent = '<span style="color:#888;">No usage recorded for this month yet.</span>';
+                    // กำหนดโควต้ามาตรฐาน (อนาคตเสียงใหม่ๆ จะได้ 1 ล้านเป็นค่าเริ่มต้น)
+                    const limits = {
+                        "Standard": 4000000,
+                        "Default": 1000000
+                    };
+
+                    // วนลูปวาดกล่องข้อความตามจำนวนตระกูลเสียงที่ได้รับมาอัตโนมัติ
+                    for (const [family, usage] of Object.entries(data.totals)) {
+                        if (usage > 0) {
+                            // ดึงโควต้า ถ้าไม่มีในลิสต์ให้ใช้ค่า Default
+                            const limit = limits[family] || limits["Default"];
+                            const color = getUsageColor(usage, limit);
+                            
+                            htmlContent += `${family}: <span style="color:${color}">${usage.toLocaleString()}</span> / ${limit.toLocaleString()} (Free)<br>`;
+                        }
                     }
+                    
                     document.getElementById('usageDetails').innerHTML = htmlContent;
+                } else {
+                    document.getElementById('usageDetails').innerHTML = '<span style="color:#888;">No usage recorded for this month yet.</span>';
                 }
             } catch (error) {
                 console.error("Failed to fetch total usage:", error);
@@ -343,7 +349,7 @@
                     let wrappedSSML = `<speak>\n<prosody rate="${rateStr}">\n${innerText}\n</prosody>\n</speak>`;
                     totalChars += wrappedSSML.length;
                 } else {
-                    // Neural2 และอื่นๆ ปรับ Rate และ Pitch ได้
+                    // Neural2 หรือ "เสียงใหม่ๆ ในอนาคต" จะตกมาเข้าเงื่อนไขนี้ (ปรับ Rate + Pitch ได้)
                     let wrappedSSML = `<speak>\n<prosody rate="${rateStr}" pitch="${pitchStr}">\n${innerText}\n</prosody>\n</speak>`;
                     totalChars += wrappedSSML.length;
                 }
