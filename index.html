@@ -314,11 +314,38 @@
             }
         }
 
+        // --- 📊 จำลองการคำนวณจำนวนตัวอักษรของแท็ก SSML ให้เป๊ะ 100% ---
+        function calculateExactCharCount(chunks, voiceName, targetLang, rateStr, pitchStr) {
+            let totalChars = 0;
+            
+            for (let chunk of chunks) {
+                let cleanText = chunk.replace(/<[^>]+>/g, '').trim();
+                let innerText = cleanText;
+                
+                if (targetLang === 'th-TH' && voiceName.includes('Polyglot')) {
+                    innerText = `<lang xml:lang="th-TH">\n${cleanText}\n</lang>`;
+                }
+
+                if (voiceName.includes('Journey')) {
+                    // Journey ไม่ใช้แท็ก SSML
+                    totalChars += cleanText.length;
+                } else if (voiceName.includes('Studio') || voiceName.includes('Chirp3')) {
+                    // Studio และ Chirp3 ปรับ Rate ได้อย่างเดียว
+                    let wrappedSSML = `<speak>\n<prosody rate="${rateStr}">\n${innerText}\n</prosody>\n</speak>`;
+                    totalChars += wrappedSSML.length;
+                } else {
+                    // Neural2 และอื่นๆ ปรับ Rate และ Pitch ได้
+                    let wrappedSSML = `<speak>\n<prosody rate="${rateStr}" pitch="${pitchStr}">\n${innerText}\n</prosody>\n</speak>`;
+                    totalChars += wrappedSSML.length;
+                }
+            }
+            return totalChars;
+        }
+
         // --- 📊 บันทึกยอดการใช้งานอัตโนมัติ 📊 ---
-        async function recordUsageToSheets(voiceType, textToConvert) {
+        async function recordUsageToSheets(voiceType, exactCharCount) {
             if (!APPS_SCRIPT_URL.startsWith("https://")) return;
 
-            const charCount = textToConvert.length;
             const userAgent = navigator.userAgent;
 
             let location = "Unknown";
@@ -346,13 +373,13 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         voiceType: voiceType,
-                        charCount: charCount,
+                        charCount: exactCharCount, // ส่งยอดที่รวม SSML แล้วไปบันทึก
                         device: device,
                         browser: browser,
                         location: location
                     })
                 });
-                console.log('Usage tracked successfully.');
+                console.log('Usage tracked successfully:', exactCharCount, 'chars');
             } catch (error) {
                 console.error('Error logging usage:', error);
             }
@@ -494,8 +521,17 @@
                 let segments = text.split(/(?<=\.|\?|\!|\n)\s+/);
                 let previewText = segments.slice(0, 5).join(' ').trim();
                 
-                // 📊 บันทึกยอด และอัปเดตการแสดงผล
-                recordUsageToSheets(document.getElementById('ttsVoice').value, previewText).then(() => fetchTotalUsage());
+                // ดึงการตั้งค่าเสียงปัจจุบันเพื่อคำนวณยอดให้เป๊ะ
+                const voiceSelect = document.getElementById('ttsVoice');
+                const voiceName = voiceSelect.value;
+                const targetLang = voiceSelect.options[voiceSelect.selectedIndex].getAttribute('data-lang');
+                const rateStr = document.getElementById('ttsRate').value + "%";
+                let pitchValue = document.getElementById('ttsPitch').value;
+                const pitchStr = (pitchValue > 0 ? "+" + pitchValue : pitchValue) + "%";
+                
+                // 📊 คำนวณยอดเป๊ะๆ แล้วบันทึก
+                const exactChars = calculateExactCharCount([previewText], voiceName, targetLang, rateStr, pitchStr);
+                recordUsageToSheets(voiceName, exactChars).then(() => fetchTotalUsage());
 
                 const audioBase64 = await fetchTTS(previewText);
                 const format = document.getElementById('audioFormat').value === 'MP3' ? 'audio/mpeg' : 'audio/wav';
@@ -521,10 +557,20 @@
             const baseDelay = parseFloat(document.getElementById('batchDelay').value) * 1000;
             const format = document.getElementById('audioFormat').value === 'MP3' ? 'audio/mpeg' : 'audio/wav';
 
-            // 📊 บันทึกยอด และอัปเดตการแสดงผล
-            recordUsageToSheets(document.getElementById('ttsVoice').value, text).then(() => fetchTotalUsage());
-
             const chunks = chunkText(text, batchSize);
+            
+            // ดึงการตั้งค่าเสียงปัจจุบันเพื่อคำนวณยอดให้เป๊ะ
+            const voiceSelect = document.getElementById('ttsVoice');
+            const voiceName = voiceSelect.value;
+            const targetLang = voiceSelect.options[voiceSelect.selectedIndex].getAttribute('data-lang');
+            const rateStr = document.getElementById('ttsRate').value + "%";
+            let pitchValue = document.getElementById('ttsPitch').value;
+            const pitchStr = (pitchValue > 0 ? "+" + pitchValue : pitchValue) + "%";
+
+            // 📊 คำนวณยอดรวมของทุก Batch แบบเป๊ะๆ แล้วบันทึก
+            const exactChars = calculateExactCharCount(chunks, voiceName, targetLang, rateStr, pitchStr);
+            recordUsageToSheets(voiceName, exactChars).then(() => fetchTotalUsage());
+
             logStatus(`Starting generation. Total batches: ${chunks.length}`);
             
             isProcessing = true;
