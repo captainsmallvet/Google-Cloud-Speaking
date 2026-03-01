@@ -302,19 +302,34 @@
                 if (data.totals && Object.keys(data.totals).length > 0) {
                     let htmlContent = "";
                     
-                    // กำหนดโควต้ามาตรฐาน (อนาคตเสียงใหม่ๆ จะได้ 1 ล้านเป็นค่าเริ่มต้น)
+                    // 1. จับกลุ่มยอดที่ใช้โควต้าบิลลิ่งกระเป๋าเดียวกันของ Google Cloud
+                    let wavenetBillingTotal = (data.totals["Neural2"] || 0) + (data.totals["Polyglot"] || 0) + (data.totals["Wavenet"] || 0) + (data.totals["WaveNet"] || 0);
+                    
+                    // 2. คัดลอกยอดมาจัดกลุ่มใหม่เพื่อเตรียมแสดงผล
+                    let displayTotals = {};
+                    for (const [family, usage] of Object.entries(data.totals)) {
+                        // ข้ามพวกที่ใช้โควต้าร่วมกันไปก่อน เพราะเราบวกเลขรอไว้แล้ว
+                        if (family === "Neural2" || family === "Polyglot" || family.toLowerCase() === "wavenet") continue;
+                        displayTotals[family] = usage;
+                    }
+                    
+                    // 3. ถ้ายอดรวมตระกูล WaveNet มีการใช้งาน ให้สร้างบรรทัดใหม่ชื่อนี้เลย
+                    if (wavenetBillingTotal > 0) {
+                        displayTotals["WaveNet (Neural2 + Polyglot)"] = wavenetBillingTotal;
+                    }
+
+                    // 4. กำหนดโควต้า
                     const limits = {
                         "Standard": 4000000,
+                        "WaveNet (Neural2 + Polyglot)": 1000000,
                         "Default": 1000000
                     };
 
-                    // วนลูปวาดกล่องข้อความตามจำนวนตระกูลเสียงที่ได้รับมาอัตโนมัติ
-                    for (const [family, usage] of Object.entries(data.totals)) {
+                    // 5. วาดบรรทัดและเช็คสี
+                    for (const [family, usage] of Object.entries(displayTotals)) {
                         if (usage > 0) {
-                            // ดึงโควต้า ถ้าไม่มีในลิสต์ให้ใช้ค่า Default
                             const limit = limits[family] || limits["Default"];
                             const color = getUsageColor(usage, limit);
-                            
                             htmlContent += `${family}: <span style="color:${color}">${usage.toLocaleString()}</span> / ${limit.toLocaleString()} (Free)<br>`;
                         }
                     }
